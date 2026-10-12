@@ -1,0 +1,499 @@
+[
+  {
+    "name": "Press de Banca Plano",
+    "muscleGroup": "Pecho",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 120
+  },
+  {
+    "name": "Press Inclinado con Mancuernas",
+    "muscleGroup": "Pecho",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Press Declinado",
+    "muscleGroup": "Pecho",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Aperturas en Polea (Crossover)",
+    "muscleGroup": "Pecho",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Fondos en Paralelas (Dips Pecho)",
+    "muscleGroup": "Pecho",
+    "equipment": "Peso corporal",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Press en Máquina de Pecho (Chest Press)",
+    "muscleGroup": "Pecho",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Flexiones de Brazos (Push-ups)",
+    "muscleGroup": "Pecho",
+    "equipment": "Peso corporal",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Peso Muerto Convencional",
+    "muscleGroup": "Espalda",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 180
+  },
+  {
+    "name": "Dominadas Pronas (Pull-ups)",
+    "muscleGroup": "Espalda",
+    "equipment": "Peso corporal",
+    "isCustom": false,
+    "defaultRestSeconds": 120
+  },
+  {
+    "name": "Remo con Barra (Pendlay)",
+    "muscleGroup": "Espalda",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Remo Unilateral con Mancuerna",
+    "muscleGroup": "Espalda",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Jalón al Pecho en Polea",
+    "muscleGroup": "Espalda",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Remo en Polea Baja (Gironda)",
+    "muscleGroup": "Espalda",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Remo en Máquina con Apoyo de Pecho",
+    "muscleGroup": "Espalda",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Press Militar de Pie (OHP)",
+    "muscleGroup": "Hombros",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 120
+  },
+  {
+    "name": "Press de Hombros Sentado con Mancuernas",
+    "muscleGroup": "Hombros",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Elevaciones Laterales con Mancuernas",
+    "muscleGroup": "Hombros",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Elevaciones Laterales en Polea",
+    "muscleGroup": "Hombros",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Pájaros Posteriores con Mancuernas",
+    "muscleGroup": "Hombros",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Face Pulls en Polea",
+    "muscleGroup": "Hombros",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Press de Hombro en Máquina",
+    "muscleGroup": "Hombros",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Curl de Bíceps con Barra Z",
+    "muscleGroup": "Bíceps",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Curl Martillo con Mancuernas",
+    "muscleGroup": "Bíceps",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Curl Inclinado con Mancuernas",
+    "muscleGroup": "Bíceps",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Curl en Polea Baja",
+    "muscleGroup": "Bíceps",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Curl Predicador en Banco Scott",
+    "muscleGroup": "Bíceps",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Dominadas Supinas (Chin-ups)",
+    "muscleGroup": "Bíceps",
+    "equipment": "Peso corporal",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Extensiones de Tríceps en Polea Alta con Cuerda",
+    "muscleGroup": "Tríceps",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Press Francés con Barra Z",
+    "muscleGroup": "Tríceps",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Press de Banca Agarre Cerrado",
+    "muscleGroup": "Tríceps",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Fondos entre Bancos para Tríceps",
+    "muscleGroup": "Tríceps",
+    "equipment": "Peso corporal",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Extensión de Tríceps sobre la Cabeza con Mancuerna",
+    "muscleGroup": "Tríceps",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Extensión de Tríceps en Máquina",
+    "muscleGroup": "Tríceps",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Sentadilla Trasera con Barra (Back Squat)",
+    "muscleGroup": "Cuádriceps",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 180
+  },
+  {
+    "name": "Sentadilla Frontal",
+    "muscleGroup": "Cuádriceps",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 150
+  },
+  {
+    "name": "Prensa de Piernas 45°",
+    "muscleGroup": "Cuádriceps",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 120
+  },
+  {
+    "name": "Extensión de Cuádriceps en Máquina",
+    "muscleGroup": "Cuádriceps",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Sentadilla Búlgara con Mancuernas",
+    "muscleGroup": "Cuádriceps",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Sentadilla Hack en Máquina",
+    "muscleGroup": "Cuádriceps",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 120
+  },
+  {
+    "name": "Zancadas Caminando con Mancuernas",
+    "muscleGroup": "Cuádriceps",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Peso Muerto Rumano con Barra",
+    "muscleGroup": "Isquios",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 120
+  },
+  {
+    "name": "Curl Femoral Tumbado en Máquina",
+    "muscleGroup": "Isquios",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Curl Femoral Sentado en Máquina",
+    "muscleGroup": "Isquios",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Peso Muerto Rumano con Mancuernas",
+    "muscleGroup": "Isquios",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Curl Nórdico de Isquios",
+    "muscleGroup": "Isquios",
+    "equipment": "Peso corporal",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Elevación de Talones de Pie en Máquina",
+    "muscleGroup": "Gemelos",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Elevación de Talones Sentado en Máquina",
+    "muscleGroup": "Gemelos",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Elevación de Gemelos en Prensa de Piernas",
+    "muscleGroup": "Gemelos",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Elevación de Talones Unilateral con Mancuerna",
+    "muscleGroup": "Gemelos",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 45
+  },
+  {
+    "name": "Elevaciones de Piernas Colgado en Barra",
+    "muscleGroup": "Abdomen",
+    "equipment": "Peso corporal",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Rueda Abdominal (Ab Wheel Rollout)",
+    "muscleGroup": "Abdomen",
+    "equipment": "Peso corporal",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Crunch Abdominal en Polea Alta",
+    "muscleGroup": "Abdomen",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Plancha Abdominal Isométrica",
+    "muscleGroup": "Abdomen",
+    "equipment": "Peso corporal",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Crunches Abdominales en Máquina",
+    "muscleGroup": "Abdomen",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Giros Rusos (Russian Twists) con Mancuerna",
+    "muscleGroup": "Abdomen",
+    "equipment": "Mancuerna",
+    "isCustom": false,
+    "defaultRestSeconds": 45
+  },
+  {
+    "name": "Sentadilla en Smith",
+    "muscleGroup": "Cuádriceps",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 120
+  },
+  {
+    "name": "Cruces en polea alta",
+    "muscleGroup": "Pecho",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Remo sentado en polea (agarre V)",
+    "muscleGroup": "Espalda",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Curl en banco Scott con barra EZ",
+    "muscleGroup": "Bíceps",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Fondos en máquina asistida",
+    "muscleGroup": "Tríceps",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Peck Deck en máquina",
+    "muscleGroup": "Pecho",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Peck Deck inverso (pájaros)",
+    "muscleGroup": "Hombros",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Extensión lumbar en máquina",
+    "muscleGroup": "Espalda",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Prensa horizontal / sentada",
+    "muscleGroup": "Cuádriceps",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Hip Thrust (máquina o barra)",
+    "muscleGroup": "Piernas",
+    "equipment": "Barra",
+    "isCustom": false,
+    "defaultRestSeconds": 90
+  },
+  {
+    "name": "Máquina de abductores",
+    "muscleGroup": "Piernas",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Máquina de aductores",
+    "muscleGroup": "Piernas",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Jalón al pecho prono",
+    "muscleGroup": "Espalda",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Jalón al pecho agarre neutro",
+    "muscleGroup": "Espalda",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  },
+  {
+    "name": "Extensión de tríceps en polea",
+    "muscleGroup": "Tríceps",
+    "equipment": "Polea",
+    "isCustom": false,
+    "defaultRestSeconds": 60
+  },
+  {
+    "name": "Remo con apoyo en el pecho",
+    "muscleGroup": "Espalda",
+    "equipment": "Máquina",
+    "isCustom": false,
+    "defaultRestSeconds": 75
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "name": "Gym Tracker",
+  "description": "Aplicación offline de registro de entrenamientos de gimnasio estilo Hevy con Room, Jetpack Compose y Clean Architecture.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
