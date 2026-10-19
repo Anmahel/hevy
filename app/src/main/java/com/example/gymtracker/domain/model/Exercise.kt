@@ -10,5 +10,6 @@ data class Exercise(
     val thumbnailUrl: String = "",
     val primaryMuscle: String = "",
     val secondaryMuscles: String = "",
-    val instructions: String = ""
+    val instructions: String = "",
+    val pinnedNote: String = ""
 )

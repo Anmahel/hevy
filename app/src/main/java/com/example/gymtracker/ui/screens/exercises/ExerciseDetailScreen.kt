@@ -1,5 +1,7 @@
 package com.example.gymtracker.ui.screens.exercises
 
+import com.example.ui.theme.safeHeaderTopPadding
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
@@ -29,6 +33,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,6 +67,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.gymtracker.data.local.entity.ExerciseEntity
+import com.example.gymtracker.ui.components.ExerciseStrengthRankCard
 import com.example.gymtracker.ui.components.media.ExerciseGifPlayer
 import java.util.Locale
 
@@ -80,16 +86,23 @@ fun ExerciseDetailScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = exercise?.name ?: "Detalle del Ejercicio",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                },
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(com.example.ui.theme.GymStickyHeaderBg)
+                    .safeHeaderTopPadding()
+            ) {
+                TopAppBar(
+                    windowInsets = WindowInsets(0, 0, 0, 0),
+                    title = {
+                        Text(
+                            text = exercise?.name ?: "Detalle del Ejercicio",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    },
                 navigationIcon = {
                     IconButton(
                         onClick = onNavigateBack,
@@ -102,6 +115,19 @@ fun ExerciseDetailScreen(
                     }
                 },
                 actions = {
+                    if (exercise != null) {
+                        IconButton(
+                            onClick = { viewModel.openEditDialog() },
+                            modifier = Modifier.testTag("exercise_detail_edit_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Editar ejercicio",
+                                tint = com.example.ui.theme.GymCyanSecondary
+                            )
+                        }
+                    }
+
                     IconButton(
                         onClick = { showMenu = true },
                         modifier = Modifier.testTag("exercise_detail_options_button")
@@ -116,6 +142,13 @@ fun ExerciseDetailScreen(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
+                        DropdownMenuItem(
+                            text = { Text("✏️ Editar ejercicio") },
+                            onClick = {
+                                showMenu = false
+                                viewModel.openEditDialog()
+                            }
+                        )
                         DropdownMenuItem(
                             text = { Text("Información muscular") },
                             onClick = {
@@ -140,12 +173,13 @@ fun ExerciseDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
+                    containerColor = Color.Transparent,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                     navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
                     actionIconContentColor = MaterialTheme.colorScheme.onBackground
                 )
-            )
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier
@@ -180,7 +214,13 @@ fun ExerciseDetailScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Área superior prominente con reproductor GIF animado
+                // URL garantizada de ilustración real de ejecución biomecánica
+                val resolvedMediaUrl = remember(exercise) {
+                    val direct = exercise.gifPathOrUrl.ifEmpty { exercise.thumbnailUrl }
+                    if (direct.isNotBlank()) direct else com.example.gymtracker.data.preset.ExerciseImageProvider.getImageUrlForExercise(exercise.name, exercise.muscleGroup)
+                }
+
+                // Área superior prominente con ilustración/animación real del ejercicio
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -188,7 +228,7 @@ fun ExerciseDetailScreen(
                         .padding(horizontal = 16.dp, vertical = 6.dp)
                 ) {
                     ExerciseGifPlayer(
-                        gifSource = exercise.gifPathOrUrl.ifEmpty { exercise.thumbnailUrl },
+                        gifSource = resolvedMediaUrl,
                         exerciseName = exercise.name,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -209,9 +249,10 @@ fun ExerciseDetailScreen(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    Row(
+                    @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+                    androidx.compose.foundation.layout.FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         val primaryMuscleDisplay = exercise.primaryMuscle.ifEmpty { exercise.muscleGroup }
                         SuggestionChip(
@@ -220,7 +261,9 @@ fun ExerciseDetailScreen(
                                 Text(
                                     text = primaryMuscleDisplay,
                                     style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             },
                             colors = SuggestionChipDefaults.suggestionChipColors(
@@ -237,7 +280,9 @@ fun ExerciseDetailScreen(
                                 label = {
                                     Text(
                                         text = "+ ${exercise.secondaryMuscles}",
-                                        style = MaterialTheme.typography.labelSmall
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 },
                                 colors = SuggestionChipDefaults.suggestionChipColors(
@@ -254,7 +299,9 @@ fun ExerciseDetailScreen(
                             label = {
                                 Text(
                                     text = exercise.equipment,
-                                    style = MaterialTheme.typography.labelSmall
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             },
                             colors = SuggestionChipDefaults.suggestionChipColors(
@@ -292,12 +339,33 @@ fun ExerciseDetailScreen(
 
                 // Contenido de la pestaña activa
                 when (uiState.selectedTab) {
-                    0 -> ExerciseSummaryTab(exercise = exercise, uiState = uiState)
+                    0 -> ExerciseSummaryTab(
+                        exercise = exercise,
+                        uiState = uiState,
+                        onUpdatePinnedNote = { viewModel.updatePinnedNote(it) }
+                    )
                     1 -> ExerciseHistoryTab(uiState = uiState)
                     2 -> ExerciseInstructionsTab(exercise = exercise, instructions = uiState.instructionsList)
                 }
             }
         }
+    }
+
+    if (uiState.isEditDialogOpen && exercise != null) {
+        CreateOrEditExerciseDialog(
+            initialExercise = exercise,
+            onDismiss = { viewModel.closeEditDialog() },
+            onSave = { name, primaryMuscle, secondaryMuscles, equipment, mediaUrl, rest ->
+                viewModel.updateExerciseDetails(
+                    name = name,
+                    primaryMuscle = primaryMuscle,
+                    secondaryMuscles = secondaryMuscles,
+                    equipment = equipment,
+                    mediaUrlOrPath = mediaUrl,
+                    defaultRestSeconds = rest
+                )
+            }
+        )
     }
 }
 
@@ -307,19 +375,31 @@ fun ExerciseDetailScreen(
 @Composable
 private fun ExerciseSummaryTab(
     exercise: ExerciseEntity,
-    uiState: ExerciseDetailUiState
+    uiState: ExerciseDetailUiState,
+    onUpdatePinnedNote: (String) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 112.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Sección Récords Personales estilo Hevy
+        // Módulo 4: Rango de Fuerza Competitivo (Bronce, Plata, Oro, Platino, Diamante, Titán)
+        uiState.strengthRankInfo?.let { rankInfo ->
+            item {
+                ExerciseStrengthRankCard(rankInfo = rankInfo)
+            }
+        }
+
+        // Sección Récords Personales estilo Hevy (Carbon Glass + Fire/Amber PRs)
         item {
             Card(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = com.example.ui.theme.GymGlassSurface
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    com.example.ui.theme.GymAmberFlame.copy(alpha = 0.35f)
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -333,7 +413,7 @@ private fun ExerciseSummaryTab(
                         Icon(
                             imageVector = Icons.Default.EmojiEvents,
                             contentDescription = null,
-                            tint = Color(0xFFFFB300), // Oro / Trofeo
+                            tint = com.example.ui.theme.GymAmberFlame,
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
@@ -399,6 +479,106 @@ private fun ExerciseSummaryTab(
                     DetailRow(label = "Equipamiento", value = exercise.equipment)
                     DetailRow(label = "Descanso Predeterminado", value = "${exercise.defaultRestSeconds} segundos")
                     DetailRow(label = "Series Completadas", value = "${uiState.totalCompletedSetsCount} series registradas")
+                }
+            }
+        }
+
+        // 3. NOTA FIJA PERMANENTE (Pinned Note)
+        item {
+            var isEditingNote by remember { mutableStateOf(false) }
+            var noteDraft by remember(exercise.pinnedNote) { mutableStateOf(exercise.pinnedNote) }
+
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("exercise_pinned_note_card")
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.EditNote,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Nota Fija Técnica",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        if (!isEditingNote) {
+                            androidx.compose.material3.TextButton(
+                                onClick = { isEditingNote = true },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = if (exercise.pinnedNote.isBlank()) "+ Añadir" else "Editar",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (isEditingNote) {
+                        androidx.compose.material3.OutlinedTextField(
+                            value = noteDraft,
+                            onValueChange = { noteDraft = it },
+                            placeholder = { Text("Ej. Asiento en nivel 4, agarre neutro, tope de polea...") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("pinned_note_input"),
+                            singleLine = false,
+                            maxLines = 4,
+                            textStyle = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            androidx.compose.material3.TextButton(onClick = { isEditingNote = false }) {
+                                Text("Cancelar")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    onUpdatePinnedNote(noteDraft.trim())
+                                    isEditingNote = false
+                                }
+                            ) {
+                                Text("Guardar Nota")
+                            }
+                        }
+                    } else {
+                        if (exercise.pinnedNote.isNotBlank()) {
+                            Text(
+                                text = exercise.pinnedNote,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Text(
+                                text = "Sin nota técnica guardada. Puedes añadir ajustes de banco, agarre o sensaciones para verlos siempre que entrenes.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -507,22 +687,23 @@ private fun ExerciseHistoryTab(uiState: ExerciseDetailUiState) {
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 112.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(uiState.historySessions, key = { it.sessionId }) { session ->
                 Card(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = com.example.ui.theme.GymGlassSurface
                     ),
+                    border = com.example.ui.theme.CarbonGlassBorderStroke,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
+                        // Título de la rutina arriba y fecha debajo en una sola línea para evitar que se parta
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalArrangement = Arrangement.spacedBy(3.dp)
                         ) {
                             Text(
                                 text = session.sessionTitle,
@@ -533,7 +714,9 @@ private fun ExerciseHistoryTab(uiState: ExerciseDetailUiState) {
                             Text(
                                 text = session.formattedDate,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
 
@@ -601,7 +784,7 @@ private fun ExerciseInstructionsTab(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 112.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {

@@ -49,4 +49,24 @@ interface WorkoutRepository {
      * Elimina una sesión y sus sets en cascada.
      */
     suspend fun deleteWorkoutSession(sessionId: Long)
+
+    /**
+     * Consulta todas las sesiones completadas para el cálculo de rachas.
+     */
+    fun getAllCompletedSessions(): Flow<List<WorkoutSessionEntity>>
+
+    /**
+     * Consulta sesiones completadas con detalles dentro de un rango temporal.
+     */
+    fun getCompletedSessionsInRange(startMillis: Long, endMillis: Long): Flow<List<WorkoutSessionWithDetails>>
+
+    /**
+     * Cuenta sesiones en un rango temporal.
+     */
+    fun countSessionsInRange(startMillis: Long, endMillis: Long): Flow<Int>
+
+    /**
+     * Consulta todas las series completadas de sesiones finalizadas con detalles de músculo y tiempos.
+     */
+    fun getAllCompletedMuscleSets(): Flow<List<com.example.gymtracker.data.local.relation.CompletedMuscleSetRecord>>
 }

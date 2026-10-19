@@ -140,12 +140,26 @@ fun GymNavGraph(
             composable(
                 route = Screen.ActiveWorkout.route,
                 arguments = listOf(
-                    navArgument("workoutId") { type = NavType.LongType }
+                    navArgument("workoutId") {
+                        type = NavType.LongType
+                        defaultValue = 0L
+                    },
+                    navArgument("routineId") {
+                        type = NavType.LongType
+                        defaultValue = 0L
+                    }
                 )
             ) { backStackEntry ->
                 val workoutId = backStackEntry.arguments?.getLong("workoutId") ?: 0L
+                val routineId = backStackEntry.arguments?.getLong("routineId") ?: 0L
                 val activeWorkoutViewModel: ActiveWorkoutViewModel = viewModel(
-                    factory = ActiveWorkoutViewModel.Factory(workoutId, repository, workoutRepository)
+                    factory = ActiveWorkoutViewModel.Factory(
+                        workoutId = workoutId,
+                        routineId = routineId,
+                        repository = repository,
+                        workoutRepository = workoutRepository,
+                        routineRepository = routineRepository
+                    )
                 )
                 ActiveWorkoutScreen(
                     viewModel = activeWorkoutViewModel,

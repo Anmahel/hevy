@@ -50,5 +50,26 @@ class WorkoutRepositoryImpl(
 
     override suspend fun deleteWorkoutSession(sessionId: Long) {
         workoutDao.deleteWorkoutSessionById(sessionId)
+        try {
+            workoutDao.deleteWorkoutById(sessionId)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun getAllCompletedSessions(): Flow<List<WorkoutSessionEntity>> {
+        return workoutDao.getAllCompletedSessions()
+    }
+
+    override fun getCompletedSessionsInRange(startMillis: Long, endMillis: Long): Flow<List<WorkoutSessionWithDetails>> {
+        return workoutDao.getCompletedSessionsInRange(startMillis, endMillis)
+    }
+
+    override fun countSessionsInRange(startMillis: Long, endMillis: Long): Flow<Int> {
+        return workoutDao.countSessionsInRange(startMillis, endMillis)
+    }
+
+    override fun getAllCompletedMuscleSets(): Flow<List<com.example.gymtracker.data.local.relation.CompletedMuscleSetRecord>> {
+        return workoutDao.getAllCompletedMuscleSets()
     }
 }

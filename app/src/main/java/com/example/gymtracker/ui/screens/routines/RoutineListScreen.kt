@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -69,6 +70,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.gymtracker.data.local.relation.RoutineWithOrderedExercises
 import com.example.gymtracker.data.preset.DefaultRoutinesData
 
+import com.example.gymtracker.ui.components.GlobalTopHeader
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoutineListScreen(
@@ -76,6 +79,14 @@ fun RoutineListScreen(
     onNavigateToCreateRoutine: () -> Unit,
     onNavigateToEditRoutine: (Long) -> Unit,
     onNavigateToActiveWorkout: (Long) -> Unit,
+    onNavigateToBackup: () -> Unit = {},
+    athleteLevel: Int = 1,
+    onOpenRpgProfile: () -> Unit = {},
+    waterGlassesToday: Int = 0,
+    isWaterGoalMetToday: Boolean = false,
+    creatineTakenToday: Boolean = false,
+    onQuickAddWaterGlass: () -> Unit = {},
+    onQuickTakeCreatine: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,29 +94,16 @@ fun RoutineListScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Mis Rutinas",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                },
-                actions = {
-                    IconButton(
-                        onClick = { viewModel.seedDefaultRoutines(forceReload = true) },
-                        modifier = Modifier.testTag("reload_preset_routines_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = "Cargar Rutinas Día a Día",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+            GlobalTopHeader(
+                title = "Mis Rutinas",
+                waterGlassesToday = waterGlassesToday,
+                isWaterGoalMetToday = isWaterGoalMetToday,
+                creatineTakenToday = creatineTakenToday,
+                athleteLevel = athleteLevel,
+                onQuickAddWaterGlass = onQuickAddWaterGlass,
+                onQuickTakeCreatine = onQuickTakeCreatine,
+                onOpenRpgProfile = onOpenRpgProfile,
+                onNavigateToBackup = onNavigateToBackup
             )
         },
         floatingActionButton = {
@@ -173,7 +171,7 @@ fun RoutineListScreen(
                             modifier = Modifier.padding(top = 8.dp, bottom = 20.dp)
                         )
                         Button(
-                            onClick = { viewModel.seedDefaultRoutines(forceReload = false) },
+                            onClick = { viewModel.seedDefaultRoutines(forceReload = true) },
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
@@ -186,6 +184,22 @@ fun RoutineListScreen(
                             Icon(Icons.Default.AutoAwesome, contentDescription = null)
                             Spacer(modifier = Modifier.size(8.dp))
                             Text("Cargar Rutinas Día 1 a Día 6", fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Button(
+                            onClick = { onNavigateToActiveWorkout(0L) },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("start_empty_workout_empty_state_button")
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Text("Iniciar entrenamiento vacío", fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(10.dp))
                         OutlinedButton(
@@ -201,21 +215,64 @@ fun RoutineListScreen(
                 }
             }
         } else {
+            val sortedRoutines = remember(uiState.routines) {
+                uiState.routines.sortedWith(compareBy({ it.routine.sortOrder }, { it.routine.id }))
+            }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
-                contentPadding = PaddingValues(bottom = 88.dp, top = 8.dp)
+                contentPadding = PaddingValues(bottom = 112.dp, top = 8.dp)
             ) {
-                // Banner informativo superior
+                // Botón Iniciar entrenamiento vacío (Degradado Verde Volt / Esmeralda + Resplandor)
+                item {
+                    Button(
+                        onClick = { onNavigateToActiveWorkout(0L) },
+                        contentPadding = PaddingValues(0.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .testTag("start_empty_workout_button"),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = Color(0xFF04130D)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(com.example.ui.theme.VoltEmeraldGradient, RoundedCornerShape(14.dp)),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                tint = Color(0xFF04130D),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Iniciar entrenamiento vacío",
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF04130D),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+
+                // Banner informativo superior (Carbon Glass + 1px border)
                 item {
                     Card(
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            containerColor = com.example.ui.theme.GymGlassSurface
                         ),
+                        border = com.example.ui.theme.CarbonGlassBorderStroke,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
@@ -229,7 +286,7 @@ fun RoutineListScreen(
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "Plan 6 Días (Compuestos → Aislamiento)",
                                     style = MaterialTheme.typography.titleSmall,
@@ -242,11 +299,24 @@ fun RoutineListScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                            IconButton(
+                                onClick = { viewModel.seedDefaultRoutines(forceReload = true) },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .testTag("reload_preset_routines_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = "Cargar Rutinas Día a Día",
+                                    tint = com.example.ui.theme.GymGreenLight,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                     }
                 }
 
-                items(uiState.routines, key = { it.routine.id }) { routineItem ->
+                items(sortedRoutines, key = { it.routine.id }) { routineItem ->
                     RoutineCard(
                         routineWithExercises = routineItem,
                         onStartWorkout = {
@@ -311,8 +381,9 @@ fun RoutineCard(
     }
 
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = com.example.ui.theme.GymGlassSurface),
+        border = com.example.ui.theme.CarbonGlassBorderStroke,
         modifier = modifier
             .fillMaxWidth()
             .testTag("routine_card_${routineWithExercises.routine.id}")
@@ -460,13 +531,15 @@ fun RoutineCard(
                             .padding(top = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        routineWithExercises.routineExercises
-                            .sortedBy { it.routineExercise.orderIndex }
+                        routineWithExercises.sortedRoutineExercises
                             .forEachIndexed { index, item ->
                                 val exercise = item.exercise
-                                val technique = remember(exercise.name) {
-                                    DefaultRoutinesData.findTechnique(routineWithExercises.routine.title, exercise.name)
+                                val preset = remember(routineWithExercises.routine.title, exercise.name) {
+                                    DefaultRoutinesData.findExercisePreset(routineWithExercises.routine.title, exercise.name)
                                 }
+                                val setsTarget = preset?.targetSets ?: item.routineExercise.targetSets
+                                val repRangeTarget = preset?.targetRepRange ?: item.routineExercise.targetRepRange
+                                val technique = preset?.technique
 
                                 Surface(
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -481,7 +554,9 @@ fun RoutineCard(
                                         ) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                modifier = Modifier.weight(1f)
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .padding(end = 8.dp)
                                             ) {
                                                 Surface(
                                                     color = MaterialTheme.colorScheme.primary,
@@ -498,12 +573,20 @@ fun RoutineCard(
                                                     }
                                                 }
                                                 Spacer(modifier = Modifier.width(8.dp))
-                                                Text(
-                                                    text = exercise.name,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onSurface
-                                                )
+                                                Column {
+                                                    Text(
+                                                        text = exercise.name,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                    Text(
+                                                        text = "$setsTarget series • Meta: $repRangeTarget",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
                                             }
 
                                             // Badge Músculo
@@ -512,9 +595,11 @@ fun RoutineCard(
                                                 shape = RoundedCornerShape(6.dp)
                                             ) {
                                                 Text(
-                                                    text = exercise.muscleGroup,
+                                                    text = preset?.muscleGroup ?: exercise.muscleGroup,
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1,
+                                                    softWrap = false,
                                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                                 )
                                             }
@@ -557,30 +642,41 @@ fun RoutineCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Botón "Empezar entreno"
+            // Botón "Empezar entreno" (Degradado Verde Volt / Esmeralda)
             Button(
                 onClick = onStartWorkout,
+                contentPadding = PaddingValues(0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(46.dp)
+                    .height(48.dp)
                     .testTag("start_workout_from_routine_${routineWithExercises.routine.id}"),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.Black
+                    containerColor = Color.Transparent,
+                    contentColor = Color(0xFF04130D)
                 )
             ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.size(6.dp))
-                Text(
-                    text = "Empezar entreno",
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(com.example.ui.theme.VoltEmeraldGradient, RoundedCornerShape(12.dp)),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = Color(0xFF04130D),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text(
+                        text = "Empezar entreno",
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF04130D),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
         }
     }

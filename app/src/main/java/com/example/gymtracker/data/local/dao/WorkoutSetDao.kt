@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WorkoutSetDao {
-    @Query("SELECT * FROM workout_sets WHERE workoutSessionId = :workoutSessionId ORDER BY exerciseId ASC, setNumber ASC")
+    @Query("SELECT * FROM workout_sets WHERE workoutSessionId = :workoutSessionId ORDER BY exerciseOrder ASC, id ASC, setNumber ASC")
     fun getSetsForWorkout(workoutSessionId: Long): Flow<List<WorkoutSetEntity>>
 
     @Query("SELECT * FROM workout_sets WHERE exerciseId = :exerciseId AND isCompleted = 1")

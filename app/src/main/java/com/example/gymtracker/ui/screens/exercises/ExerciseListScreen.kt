@@ -1,5 +1,7 @@
 package com.example.gymtracker.ui.screens.exercises
 
+import com.example.ui.theme.safeHeaderTopPadding
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -38,6 +41,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -51,35 +55,44 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.gymtracker.data.local.entity.ExerciseEntity
+import com.example.gymtracker.domain.model.HypertrophyMuscle
+import com.example.gymtracker.domain.util.StrengthRankInfo
+import com.example.gymtracker.ui.components.StrengthRankBadgeChip
 import com.example.gymtracker.ui.components.media.ExerciseThumbnail
+
+import com.example.gymtracker.ui.components.GlobalTopHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseListScreen(
     viewModel: ExerciseListViewModel,
     onExerciseClick: (Long) -> Unit = {},
+    onNavigateToBackup: () -> Unit = {},
+    athleteLevel: Int = 1,
+    onOpenRpgProfile: () -> Unit = {},
+    waterGlassesToday: Int = 0,
+    isWaterGoalMetToday: Boolean = false,
+    creatineTakenToday: Boolean = false,
+    onQuickAddWaterGlass: () -> Unit = {},
+    onQuickTakeCreatine: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val muscleGroupFilters = listOf(
-        "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps",
-        "Cuádriceps", "Isquios", "Gemelos", "Abdomen"
-    )
+    val muscleGroupFilters = HypertrophyMuscle.CATALOG_PRIMARY_MUSCLES
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Catálogo de Ejercicios",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+            GlobalTopHeader(
+                title = "Ejercicios",
+                waterGlassesToday = waterGlassesToday,
+                isWaterGoalMetToday = isWaterGoalMetToday,
+                creatineTakenToday = creatineTakenToday,
+                athleteLevel = athleteLevel,
+                onQuickAddWaterGlass = onQuickAddWaterGlass,
+                onQuickTakeCreatine = onQuickTakeCreatine,
+                onOpenRpgProfile = onOpenRpgProfile,
+                onNavigateToBackup = onNavigateToBackup
             )
         },
         floatingActionButton = {
@@ -117,7 +130,7 @@ fun ExerciseListScreen(
                             onSearch = { viewModel.onSearchBarActiveChanged(false) },
                             expanded = false,
                             onExpandedChange = {},
-                            placeholder = { Text("Buscar por nombre o músculo...") },
+                            placeholder = { Text("Buscar por nombre, músculo o equipo...") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Search,
@@ -244,7 +257,7 @@ fun ExerciseListScreen(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 88.dp)
+                    contentPadding = PaddingValues(bottom = 112.dp)
                 ) {
                     item {
                         Text(
@@ -258,7 +271,9 @@ fun ExerciseListScreen(
                     items(uiState.filteredExercises, key = { it.id }) { exercise ->
                         ExerciseCatalogItem(
                             exercise = exercise,
-                            onClick = { onExerciseClick(exercise.id) }
+                            strengthRankInfo = uiState.strengthRanksByExerciseId[exercise.id],
+                            onClick = { onExerciseClick(exercise.id) },
+                            onEditClick = { viewModel.openEditDialog(exercise) }
                         )
                     }
                 }
@@ -266,112 +281,166 @@ fun ExerciseListScreen(
         }
     }
 
-    // Modal para agregar ejercicio personalizado
+    // Modal para crear ejercicio nuevo o editar cualquier ejercicio existente
     if (uiState.isAddDialogOpen) {
-        AddCustomExerciseDialog(
+        CreateOrEditExerciseDialog(
+            initialExercise = uiState.editingExercise,
             onDismiss = { viewModel.closeAddDialog() },
-            onSave = { name, muscle, equip, rest ->
-                viewModel.createCustomExercise(name, muscle, equip, rest)
+            onSave = { name, primaryMuscle, secondaryMuscles, equip, mediaUrl, rest ->
+                viewModel.saveOrUpdateExercise(
+                    name = name,
+                    primaryMuscle = primaryMuscle,
+                    secondaryMuscles = secondaryMuscles,
+                    equipment = equip,
+                    mediaUrlOrPath = mediaUrl,
+                    defaultRestSeconds = rest
+                )
             }
         )
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ExerciseCatalogItem(
     exercise: ExerciseEntity,
+    strengthRankInfo: StrengthRankInfo? = null,
     onClick: () -> Unit = {},
+    onEditClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val primaryMuscleDisplay = exercise.primaryMuscle.ifBlank { exercise.muscleGroup }
+
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = com.example.ui.theme.GymGlassSurface
         ),
+        border = com.example.ui.theme.CarbonGlassBorderStroke,
         modifier = modifier
             .fillMaxWidth()
             .testTag("exercise_item_${exercise.id}")
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            ExerciseThumbnail(
-                imageSource = exercise.gifPathOrUrl.ifEmpty { exercise.thumbnailUrl },
-                size = 46.dp
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                ExerciseThumbnail(
+                    imageSource = exercise.thumbnailUrl.ifEmpty { exercise.gifPathOrUrl },
+                    size = 46.dp
+                )
 
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = exercise.name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    if (exercise.isCustom) {
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text("Personalizado", style = MaterialTheme.typography.labelSmall) },
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                                labelColor = MaterialTheme.colorScheme.primary
-                            ),
-                            border = null,
-                            modifier = Modifier.height(22.dp)
-                        )
+
+                    androidx.compose.foundation.layout.FlowRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = primaryMuscleDisplay,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                softWrap = false,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = exercise.equipment,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                softWrap = false,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+
+                        if (exercise.isCustom) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = "Personalizado",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                                )
+                            }
+                        }
                     }
                 }
 
+                // Botón de Editar (✏️ Icons.Default.Edit) al lado del icono circular de mancuerna
                 Row(
-                    modifier = Modifier.padding(top = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    SuggestionChip(
-                        onClick = {},
-                        label = { Text(exercise.muscleGroup, style = MaterialTheme.typography.labelSmall) },
-                        colors = SuggestionChipDefaults.suggestionChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            labelColor = MaterialTheme.colorScheme.primary
-                        ),
-                        border = null,
-                        modifier = Modifier.height(26.dp)
-                    )
+                    IconButton(
+                        onClick = onEditClick,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f))
+                            .testTag("edit_exercise_button_${exercise.id}")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Editar ejercicio ${exercise.name}",
+                            tint = com.example.ui.theme.GymCyanSecondary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
 
-                    SuggestionChip(
-                        onClick = {},
-                        label = { Text(exercise.equipment, style = MaterialTheme.typography.labelSmall) },
-                        colors = SuggestionChipDefaults.suggestionChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        border = null,
-                        modifier = Modifier.height(26.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FitnessCenter,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
                 }
             }
 
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
+            // Insignia Competitiva de Rango de Fuerza (Bronce, Plata, Oro, Platino, Diamante, Titán)
+            strengthRankInfo?.let { rankInfo ->
+                StrengthRankBadgeChip(rankInfo = rankInfo)
             }
         }
     }

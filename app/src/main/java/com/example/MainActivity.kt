@@ -21,6 +21,7 @@ class MainActivity : ComponentActivity() {
         val exerciseRepository = app.exerciseRepository
         val routineRepository = app.routineRepository
         val workoutRepository = app.workoutRepository
+        val weightRepository = app.weightRepository
 
         setContent {
             MyApplicationTheme(darkTheme = true) {
@@ -29,7 +30,8 @@ class MainActivity : ComponentActivity() {
                         exerciseRepository = exerciseRepository,
                         routineRepository = routineRepository,
                         workoutRepository = workoutRepository,
-                        gymRepository = repository
+                        gymRepository = repository,
+                        weightRepository = weightRepository
                     )
                 }
             }

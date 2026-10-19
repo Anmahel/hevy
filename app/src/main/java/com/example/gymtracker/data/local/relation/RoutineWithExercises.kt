@@ -40,12 +40,20 @@ data class RoutineWithOrderedExercises(
     val routineExercises: List<RoutineExerciseWithDetails>
 ) {
     /**
-     * Lista conveniente de ejercicios ya ordenados por orderIndex.
+     * Lista de relaciones ya ordenadas estrictamente por exerciseOrder ASC (y orderIndex ASC).
+     */
+    val sortedRoutineExercises: List<RoutineExerciseWithDetails>
+        get() = routineExercises.sortedWith(
+            compareBy<RoutineExerciseWithDetails> { it.routineExercise.exerciseOrder }
+                .thenBy { it.routineExercise.orderIndex }
+                .thenBy { it.routineExercise.id }
+        )
+
+    /**
+     * Lista conveniente de ejercicios ya ordenados por exerciseOrder ASC.
      */
     val sortedExercises: List<ExerciseEntity>
-        get() = routineExercises
-            .sortedBy { it.routineExercise.orderIndex }
-            .map { it.exercise }
+        get() = sortedRoutineExercises.map { it.exercise }
 }
 
 /**

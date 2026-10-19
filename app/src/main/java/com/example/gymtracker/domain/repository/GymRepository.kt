@@ -11,6 +11,7 @@ interface GymRepository {
     fun getAllExercises(): Flow<List<Exercise>>
     suspend fun getExerciseById(id: Long): Exercise?
     suspend fun insertExercise(exercise: Exercise): Long
+    suspend fun updateExercisePinnedNote(exerciseId: Long, note: String)
 
     // Workouts
     fun getAllWorkouts(): Flow<List<Workout>>

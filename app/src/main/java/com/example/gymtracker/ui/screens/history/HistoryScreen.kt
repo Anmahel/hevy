@@ -1,5 +1,7 @@
 package com.example.gymtracker.ui.screens.history
 
+import com.example.ui.theme.safeHeaderTopPadding
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
@@ -40,6 +42,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,39 +74,55 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Today
+import com.example.gymtracker.ui.components.WorkoutSummaryDialog
+import com.example.gymtracker.ui.screens.calendar.CalendarDaysGrid
+import com.example.gymtracker.ui.screens.calendar.DaysOfWeekHeader
+import com.example.gymtracker.ui.screens.calendar.MonthSelectorHeader
+import com.example.gymtracker.ui.screens.calendar.RestDayRecoveryCard
+import com.example.gymtracker.ui.screens.calendar.StreakHeroCard
+import com.example.gymtracker.ui.screens.calendar.WorkoutCalendarViewModel
+
+import com.example.gymtracker.ui.components.GlobalTopHeader
+import com.example.gymtracker.ui.screens.stats.PerformanceStatsBannerCard
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     viewModel: HistoryViewModel,
+    calendarViewModel: WorkoutCalendarViewModel? = null,
+    onNavigateToCalendar: () -> Unit = {},
+    onNavigateToExerciseDetail: (Long) -> Unit = {},
+    onNavigateToPerformanceStats: () -> Unit = {},
+    onNavigateToBackup: () -> Unit = {},
+    athleteLevel: Int = 1,
+    onOpenRpgProfile: () -> Unit = {},
+    waterGlassesToday: Int = 0,
+    isWaterGoalMetToday: Boolean = false,
+    creatineTakenToday: Boolean = false,
+    onQuickAddWaterGlass: () -> Unit = {},
+    onQuickTakeCreatine: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val calendarUiState = calendarViewModel?.uiState?.collectAsStateWithLifecycle()?.value
     var sessionToDelete by remember { mutableStateOf<Long?>(null) }
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Text(
-                            text = "Historial de Entrenamientos",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+            GlobalTopHeader(
+                title = "Almanaque & Racha",
+                waterGlassesToday = waterGlassesToday,
+                isWaterGoalMetToday = isWaterGoalMetToday,
+                creatineTakenToday = creatineTakenToday,
+                athleteLevel = athleteLevel,
+                onQuickAddWaterGlass = onQuickAddWaterGlass,
+                onQuickTakeCreatine = onQuickTakeCreatine,
+                onOpenRpgProfile = onOpenRpgProfile,
+                onNavigateToBackup = onNavigateToBackup,
+                modifier = Modifier.testTag("calendar_top_bar")
             )
         },
         modifier = modifier.testTag("history_screen")
@@ -117,91 +136,214 @@ fun HistoryScreen(
             ) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
-        } else if (uiState.sessions.isEmpty()) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp)
-            ) {
-                item {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 36.dp)
-                            .testTag("empty_history_card")
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.FitnessCenter,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(36.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Sin entrenamientos completados",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Cuando finalices un entrenamiento, se guardará aquí con el detalle completo de tus series y pesos levantados.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
-                        }
-                    }
-                }
-            }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(horizontal = 16.dp)
+                    .testTag("workout_calendar_content"),
+                contentPadding = PaddingValues(bottom = 112.dp, top = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                item {
-                    Text(
-                        text = "${uiState.sessions.size} sesiones registradas",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                // Acceso directo a Estadísticas de Rendimiento (Gráfica Recharts 1RM Top 5 - 6 Meses)
+                item(key = "performance_stats_banner_history") {
+                    PerformanceStatsBannerCard(
+                        onClick = onNavigateToPerformanceStats,
+                        testTag = "open_performance_stats_from_history"
                     )
                 }
 
-                items(uiState.sessions, key = { it.session.id }) { item ->
-                    val isExpanded = uiState.expandedSessionIds.contains(item.session.id)
-                    HistorySessionCard(
-                        sessionWithDetails = item,
-                        isExpanded = isExpanded,
-                        onToggleExpand = { viewModel.toggleSessionExpanded(item.session.id) },
-                        onDeleteClick = { sessionToDelete = item.session.id }
-                    )
+                // 1. Tarjeta Superior de Racha de Hipertrofia + Calendario Mensual Interactivo
+                if (calendarUiState != null && calendarViewModel != null) {
+                    item(key = "streak_card") {
+                        StreakHeroCard(
+                            streakInfo = calendarUiState.streakInfo
+                        )
+                    }
+
+                    item(key = "calendar_grid_card") {
+                        Card(
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = com.example.ui.theme.GymGlassSurface
+                            ),
+                            border = com.example.ui.theme.CarbonGlassBorderStroke,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        MonthSelectorHeader(
+                                            monthTitle = calendarUiState.currentMonthTitle,
+                                            onPreviousMonth = { calendarViewModel.onPreviousMonth() },
+                                            onNextMonth = { calendarViewModel.onNextMonth() }
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    FilledTonalButton(
+                                        onClick = { calendarViewModel.onGoToToday() },
+                                        shape = RoundedCornerShape(10.dp),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                        modifier = Modifier.testTag("calendar_today_button")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Today,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Hoy",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                DaysOfWeekHeader()
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                CalendarDaysGrid(
+                                    days = calendarUiState.days,
+                                    onDayClick = { calendarViewModel.onSelectDay(it) }
+                                )
+                            }
+                        }
+                    }
+
+                    // 2. Encabezado del Día Seleccionado (ej. "Sábado, 17 de octubre")
+                    item(key = "selected_day_header") {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                        ) {
+                            Text(
+                                text = calendarUiState.selectedDayFormatted,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            if (calendarUiState.selectedDayWorkouts.isNotEmpty()) {
+                                Text(
+                                    text = "${calendarUiState.selectedDayWorkouts.size} entreno(s) en este día",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = com.example.ui.theme.GymGreenLight,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    // 3. Tarjetas detalladas completas del día seleccionado o Día de Recuperación Muscular
+                    if (calendarUiState.selectedDayWorkouts.isNotEmpty()) {
+                        items(
+                            items = calendarUiState.selectedDayWorkouts,
+                            key = { "selected_day_${it.session.id}" }
+                        ) { detail ->
+                            val isExpanded = uiState.expandedSessionIds.contains(detail.session.id)
+                            HistorySessionCard(
+                                sessionWithDetails = detail,
+                                isExpanded = isExpanded,
+                                onToggleExpand = { viewModel.toggleSessionExpanded(detail.session.id) },
+                                onOpenShareCard = { viewModel.openShareCardForSession(detail) },
+                                onDeleteClick = { sessionToDelete = detail.session.id }
+                            )
+                        }
+                    } else {
+                        item(key = "rest_day_card") {
+                            RestDayRecoveryCard()
+                        }
+                    }
+                } else if (uiState.sessions.isEmpty()) {
+                    item(key = "empty_history_card_item") {
+                        Card(
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = com.example.ui.theme.GymGlassSurface),
+                            border = com.example.ui.theme.CarbonGlassBorderStroke,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("empty_history_card")
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FitnessCenter,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Sin entrenamientos completados",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Cuando finalices un entrenamiento, se guardará aquí con el detalle completo de tus series y pesos levantados.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    items(
+                        items = uiState.sessions,
+                        key = { "all_history_${it.session.id}" }
+                    ) { item ->
+                        val isExpanded = uiState.expandedSessionIds.contains(item.session.id)
+                        HistorySessionCard(
+                            sessionWithDetails = item,
+                            isExpanded = isExpanded,
+                            onToggleExpand = { viewModel.toggleSessionExpanded(item.session.id) },
+                            onOpenShareCard = { viewModel.openShareCardForSession(item) },
+                            onDeleteClick = { sessionToDelete = item.session.id }
+                        )
+                    }
                 }
 
-                item {
+                item(key = "bottom_spacer") {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
+    }
+
+    // Modal de Tarjeta Resumen Coleccionable (Workout Share Card) desde Historial
+    uiState.selectedShareCardSummary?.let { shareSummary ->
+        WorkoutSummaryDialog(
+            summary = shareSummary,
+            onSaveAndFinish = { viewModel.dismissShareCard() },
+            onDismiss = { viewModel.dismissShareCard() },
+            readOnlyShareMode = true
+        )
     }
 
     // Diálogo de confirmación para eliminar sesión
@@ -245,6 +387,7 @@ fun HistorySessionCard(
     sessionWithDetails: WorkoutSessionWithDetails,
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
+    onOpenShareCard: () -> Unit = {},
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -278,14 +421,14 @@ fun HistorySessionCard(
 
     Card(
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = com.example.ui.theme.GymGlassSurface),
+        border = com.example.ui.theme.CarbonGlassBorderStroke,
         modifier = modifier
             .fillMaxWidth()
             .testTag("history_item_${session.id}")
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Fila superior: Fecha y Botón de eliminar
+            // Fila superior: Fecha, Botón Tarjeta Resumen y Botón de eliminar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -293,7 +436,8 @@ fun HistorySessionCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
                     Icon(
                         imageVector = Icons.Default.CalendarToday,
@@ -308,18 +452,39 @@ fun HistorySessionCard(
                     )
                 }
 
-                IconButton(
-                    onClick = onDeleteClick,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .testTag("delete_workout_${session.id}")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Eliminar entrenamiento",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Surface(
+                        color = com.example.ui.theme.GymGreenPrimary.copy(alpha = 0.16f),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .clickable { onOpenShareCard() }
+                            .testTag("open_share_card_${session.id}")
+                    ) {
+                        Text(
+                            text = "🃏 Tarjeta",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = com.example.ui.theme.GymGreenLight,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onDeleteClick,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .testTag("delete_workout_${session.id}")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Eliminar entrenamiento",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 
@@ -329,18 +494,18 @@ fun HistorySessionCard(
             Text(
                 text = session.title,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Fila de Métricas Clave (Duración, Volumen, Series)
+            // Fila de Métricas Clave (DURACIÓN, VOLUMEN, SERIES) con tipografía técnica y tabular-nums
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .background(com.example.ui.theme.GymInputBg)
                     .padding(horizontal = 14.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -354,19 +519,19 @@ fun HistorySessionCard(
                         Icon(
                             imageVector = Icons.Default.Timer,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = com.example.ui.theme.GymTextSecondary,
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
                             text = "DURACIÓN",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = com.example.ui.theme.TechnicalLabelStyle
                         )
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = formattedDuration,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.Black
                     )
                 }
 
@@ -379,20 +544,20 @@ fun HistorySessionCard(
                         Icon(
                             imageVector = Icons.Default.FitnessCenter,
                             contentDescription = null,
-                            tint = Color(0xFF10B981),
+                            tint = com.example.ui.theme.GymGreenLight,
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
                             text = "VOLUMEN",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = com.example.ui.theme.TechnicalLabelStyle
                         )
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = String.format(Locale.getDefault(), "%,.0f kg", session.totalVolumeKg),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF10B981)
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.Black,
+                        color = com.example.ui.theme.GymGreenLight
                     )
                 }
 
@@ -405,19 +570,19 @@ fun HistorySessionCard(
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.secondary,
+                            tint = com.example.ui.theme.GymCyanSecondary,
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
                             text = "SERIES",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = com.example.ui.theme.TechnicalLabelStyle
                         )
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "$totalCompletedSets",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.Black
                     )
                 }
             }
@@ -503,7 +668,7 @@ private fun ExerciseDetailSection(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     ExerciseThumbnail(
-                        imageSource = exercise.gifPathOrUrl.ifEmpty { exercise.thumbnailUrl },
+                        imageSource = exercise.thumbnailUrl.ifEmpty { exercise.gifPathOrUrl },
                         size = 36.dp
                     )
                     Text(

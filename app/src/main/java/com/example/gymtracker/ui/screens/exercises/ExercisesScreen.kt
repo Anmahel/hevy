@@ -155,7 +155,7 @@ fun ExercisesScreen(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 80.dp)
+                contentPadding = PaddingValues(bottom = 112.dp)
             ) {
                 if (uiState.filteredExercises.isEmpty()) {
                     item {
@@ -235,20 +235,10 @@ fun ExerciseListItem(exercise: Exercise, modifier: Modifier = Modifier) {
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
+            com.example.gymtracker.ui.components.media.ExerciseThumbnail(
+                imageSource = exercise.gifPathOrUrl.ifEmpty { exercise.thumbnailUrl },
+                size = 40.dp
+            )
         }
     }
 }

@@ -9,6 +9,7 @@ import androidx.room.Update
 import com.example.gymtracker.data.local.entity.WorkoutEntity
 import com.example.gymtracker.data.local.entity.WorkoutSessionEntity
 import com.example.gymtracker.data.local.entity.WorkoutSetEntity
+import com.example.gymtracker.data.local.relation.CompletedMuscleSetRecord
 import com.example.gymtracker.data.local.relation.WorkoutSessionWithDetails
 import kotlinx.coroutines.flow.Flow
 
@@ -82,8 +83,75 @@ interface WorkoutDao {
     """)
     suspend fun getLastExercisePerformance(exerciseId: Long, currentSessionId: Long): String?
 
+    /**
+     * Obtiene el ID de la última sesión finalizada en la que participó este ejercicio (distinta de la actual).
+     */
+    @Query("""
+        SELECT ws.workoutSessionId 
+        FROM workout_sets ws
+        INNER JOIN workout_sessions s ON ws.workoutSessionId = s.id
+        WHERE ws.exerciseId = :exerciseId AND ws.workoutSessionId != :currentSessionId AND s.endTime IS NOT NULL
+        ORDER BY s.endTime DESC LIMIT 1
+    """)
+    suspend fun getLastCompletedSessionIdForExercise(exerciseId: Long, currentSessionId: Long): Long?
+
+    /**
+     * Obtiene todas las series de un ejercicio en una sesión específica.
+     */
+    @Query("""
+        SELECT * FROM workout_sets 
+        WHERE workoutSessionId = :sessionId AND exerciseId = :exerciseId 
+        ORDER BY setNumber ASC
+    """)
+    suspend fun getSetsForExerciseInSession(sessionId: Long, exerciseId: Long): List<WorkoutSetEntity>
+
     @Query("DELETE FROM workout_sessions WHERE id = :id")
     suspend fun deleteWorkoutSessionById(id: Long)
+
+    /**
+     * Consulta todas las sesiones completadas ordenadas por fecha de inicio para racha y almanaque.
+     */
+    @Query("SELECT * FROM workout_sessions WHERE endTime IS NOT NULL ORDER BY startTime ASC")
+    fun getAllCompletedSessions(): Flow<List<WorkoutSessionEntity>>
+
+    /**
+     * Consulta las sesiones completadas con sus detalles en un rango de fechas.
+     */
+    @Transaction
+    @Query("SELECT * FROM workout_sessions WHERE startTime >= :startMillis AND startTime <= :endMillis AND endTime IS NOT NULL ORDER BY startTime ASC")
+    fun getCompletedSessionsInRange(startMillis: Long, endMillis: Long): Flow<List<WorkoutSessionWithDetails>>
+
+    /**
+     * Cuenta el total de entrenamientos completados en un rango de fechas.
+     */
+    @Query("SELECT COUNT(*) FROM workout_sessions WHERE startTime >= :startMillis AND startTime <= :endMillis AND endTime IS NOT NULL")
+    fun countSessionsInRange(startMillis: Long, endMillis: Long): Flow<Int>
+
+    /**
+     * Consulta todas las series completadas de sesiones finalizadas con los datos del ejercicio
+     * y las marcas de tiempo de la sesión, para calcular volumen de hipertrofia y estado de recuperación.
+     */
+    @Query("""
+        SELECT 
+            ws.id AS setId,
+            ws.exerciseId AS exerciseId,
+            e.name AS exerciseName,
+            e.muscleGroup AS muscleGroup,
+            e.primaryMuscle AS primaryMuscle,
+            e.secondaryMuscles AS secondaryMuscles,
+            ws.weightKg AS weightKg,
+            ws.reps AS reps,
+            ws.setType AS setType,
+            ws.isCompleted AS isCompleted,
+            s.startTime AS sessionStartTime,
+            s.endTime AS sessionEndTime
+        FROM workout_sets ws
+        INNER JOIN exercises e ON ws.exerciseId = e.id
+        INNER JOIN workout_sessions s ON ws.workoutSessionId = s.id
+        WHERE ws.isCompleted = 1 AND s.endTime IS NOT NULL
+        ORDER BY s.startTime DESC
+    """)
+    fun getAllCompletedMuscleSets(): Flow<List<CompletedMuscleSetRecord>>
 
 
     // --- COMPATIBILIDAD CON VISTAS EXISTENTES ---

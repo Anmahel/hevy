@@ -1,5 +1,7 @@
 package com.example.gymtracker.ui.screens.routines
 
+import com.example.ui.theme.safeHeaderTopPadding
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -86,44 +88,52 @@ fun EditRoutineScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.testTag("edit_routine_back_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(com.example.ui.theme.GymStickyHeaderBg)
+                    .safeHeaderTopPadding()
+            ) {
+                CenterAlignedTopAppBar(
+                    windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onNavigateBack,
+                            modifier = Modifier.testTag("edit_routine_back_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Volver"
+                            )
+                        }
+                    },
+                    title = {
+                        Text(
+                            text = if (uiState.routineId > 0L) "Editar Rutina" else "Nueva Rutina",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
                         )
-                    }
-                },
-                title = {
-                    Text(
-                        text = if (uiState.routineId > 0L) "Editar Rutina" else "Nueva Rutina",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleLarge
+                    },
+                    actions = {
+                        Button(
+                            onClick = { viewModel.saveRoutine() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .testTag("save_routine_top_button")
+                        ) {
+                            Text("Guardar", fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Transparent
                     )
-                },
-                actions = {
-                    Button(
-                        onClick = { viewModel.saveRoutine() },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = Color.Black
-                        ),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .testTag("save_routine_top_button")
-                    ) {
-                        Text("Guardar", fontWeight = FontWeight.Bold)
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
                 )
-            )
+            }
         },
         modifier = modifier.testTag("edit_routine_screen")
     ) { innerPadding ->
@@ -133,13 +143,14 @@ fun EditRoutineScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 40.dp, top = 8.dp)
+            contentPadding = PaddingValues(bottom = 112.dp, top = 8.dp)
         ) {
             // 1. Campo para Nombre de la Rutina
             item {
                 Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = com.example.ui.theme.GymGlassSurface),
+                    border = com.example.ui.theme.CarbonGlassBorderStroke,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -344,7 +355,7 @@ fun SelectedRoutineExerciseItem(
             Spacer(modifier = Modifier.width(10.dp))
 
             ExerciseThumbnail(
-                imageSource = exercise.gifPathOrUrl.ifEmpty { exercise.thumbnailUrl },
+                imageSource = exercise.thumbnailUrl.ifEmpty { exercise.gifPathOrUrl },
                 size = 38.dp
             )
 
@@ -479,7 +490,7 @@ fun RoutineExercisePickerDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 ExerciseThumbnail(
-                                    imageSource = exercise.gifPathOrUrl.ifEmpty { exercise.thumbnailUrl },
+                                    imageSource = exercise.thumbnailUrl.ifEmpty { exercise.gifPathOrUrl },
                                     size = 38.dp
                                 )
 

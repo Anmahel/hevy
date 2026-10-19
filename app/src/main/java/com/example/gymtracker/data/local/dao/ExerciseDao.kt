@@ -84,4 +84,13 @@ interface ExerciseDao {
      */
     @Query("DELETE FROM exercises WHERE id = :id")
     suspend fun deleteExerciseById(id: Long)
+
+    @Query("SELECT * FROM exercises")
+    suspend fun getAllExercisesList(): List<ExerciseEntity>
+
+    @Update
+    suspend fun updateExercises(exercises: List<ExerciseEntity>)
+
+    @Query("UPDATE exercises SET pinnedNote = :pinnedNote WHERE id = :exerciseId")
+    suspend fun updatePinnedNote(exerciseId: Long, pinnedNote: String)
 }

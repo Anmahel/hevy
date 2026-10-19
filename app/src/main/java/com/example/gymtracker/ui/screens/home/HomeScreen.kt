@@ -100,6 +100,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 112.dp, top = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Active Workout Banner (if any)
@@ -117,8 +118,9 @@ fun HomeScreen(
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = com.example.ui.theme.GymGlassSurface
                     ),
+                    border = com.example.ui.theme.CarbonGlassBorderStroke,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
@@ -317,8 +319,9 @@ fun StatCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = com.example.ui.theme.GymGlassSurface),
+        border = com.example.ui.theme.CarbonGlassBorderStroke,
         modifier = modifier
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

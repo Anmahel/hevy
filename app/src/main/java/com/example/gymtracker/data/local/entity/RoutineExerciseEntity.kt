@@ -31,5 +31,8 @@ data class RoutineExerciseEntity(
     val id: Long = 0,
     val routineId: Long,
     val exerciseId: Long,
-    val orderIndex: Int
+    val orderIndex: Int,
+    val exerciseOrder: Int = orderIndex,
+    val targetSets: Int = 3,
+    val targetRepRange: String = "8-12 reps"
 )

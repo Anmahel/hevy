@@ -9,5 +9,6 @@ data class RoutineEntity(
     val id: Long = 0,
     val title: String,
     val notes: String = "",
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val sortOrder: Int = 99
 )

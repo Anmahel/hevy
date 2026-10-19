@@ -1,8 +1,9 @@
 package com.example.ui.theme
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -10,24 +11,30 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 
 private val GymDarkColorScheme = darkColorScheme(
     primary = GymGreenPrimary,
-    onPrimary = Color.Black,
-    primaryContainer = GymGreenDark,
-    onPrimaryContainer = Color.White,
+    onPrimary = Color(0xFF04130D),
+    primaryContainer = Color(0xFF0D2E24),
+    onPrimaryContainer = GymGreenLight,
     secondary = GymCyanSecondary,
-    onSecondary = Color.Black,
+    onSecondary = Color(0xFF04141C),
     secondaryContainer = GymDarkSurfaceVariant,
     onSecondaryContainer = GymTextPrimary,
     tertiary = GymAccentOrange,
+    onTertiary = Color.Black,
     background = GymDarkBg,
     onBackground = GymTextPrimary,
     surface = GymDarkSurface,
     onSurface = GymTextPrimary,
     surfaceVariant = GymDarkSurfaceVariant,
     onSurfaceVariant = GymTextSecondary,
+    surfaceContainer = GymDarkSurface,
+    surfaceContainerHigh = GymDarkSurfaceVariant,
+    surfaceContainerHighest = Color(0xFF222A3A),
     outline = GymDarkBorder,
+    outlineVariant = GymGlassBorder,
     error = GymError,
     onError = Color.White
 )
@@ -50,10 +57,18 @@ private val GymLightColorScheme = lightColorScheme(
     onError = Color.White
 )
 
+val GymShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(26.dp)
+)
+
 @Composable
 fun MyApplicationTheme(
-    darkTheme: Boolean = true, // Default to sleek dark gym mode
-    dynamicColor: Boolean = false, // Keep consistent branding colors
+    darkTheme: Boolean = true, // Carbon OLED Dark Mode by default
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -68,6 +83,7 @@ fun MyApplicationTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = GymShapes,
         content = content
     )
 }

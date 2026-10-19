@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -62,6 +63,17 @@ fun rememberGifImageLoader(): ImageLoader {
                     add(GifDecoder.Factory())
                 }
             }
+            .memoryCache {
+                coil.memory.MemoryCache.Builder(context)
+                    .maxSizePercent(0.25)
+                    .build()
+            }
+            .diskCache {
+                coil.disk.DiskCache.Builder()
+                    .directory(context.cacheDir.resolve("exercise_image_cache"))
+                    .maxSizeBytes(128L * 1024 * 1024) // 128 MB de caché persistente para el gimnasio
+                    .build()
+            }
             .crossfade(true)
             .build()
     }
@@ -75,9 +87,11 @@ fun rememberGifImageLoader(): ImageLoader {
 fun normalizeMediaSource(source: String): String {
     if (source.isBlank()) return ""
     return when {
+        source.startsWith("data:image") -> source
         source.startsWith("http://") || source.startsWith("https://") -> source
         source.startsWith("file://") || source.startsWith("content://") -> source
         source.startsWith("android.resource://") -> source
+        source.startsWith("/") -> "file://$source"
         source.startsWith("gifs/") -> "file:///android_asset/$source"
         source.startsWith("/gifs/") -> "file:///android_asset$source"
         source.startsWith("assets/") -> "file:///android_asset/${source.removePrefix("assets/")}"
@@ -86,6 +100,18 @@ fun normalizeMediaSource(source: String): String {
         }
         else -> source
     }
+}
+
+fun resolveCoilDataModel(normalizedSource: String): Any {
+    if (normalizedSource.startsWith("data:image") && normalizedSource.contains(";base64,")) {
+        return try {
+            val base64Part = normalizedSource.substringAfter(";base64,")
+            android.util.Base64.decode(base64Part, android.util.Base64.DEFAULT)
+        } catch (_: Exception) {
+            normalizedSource
+        }
+    }
+    return normalizedSource
 }
 
 /**
@@ -101,19 +127,25 @@ fun ExerciseGifPlayer(
 ) {
     val context = LocalContext.current
     val imageLoader = rememberGifImageLoader()
-    val normalizedSource = remember(gifSource) { normalizeMediaSource(gifSource) }
+    val resolvedSource = remember(gifSource, exerciseName) {
+        val direct = normalizeMediaSource(gifSource)
+        if (direct.isNotBlank()) direct else {
+            val fallback = com.example.gymtracker.data.preset.ExerciseImageProvider.getImageUrlForExercise(exerciseName ?: "")
+            normalizeMediaSource(fallback)
+        }
+    }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF141416)),
+            .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
-        if (normalizedSource.isNotBlank()) {
-            val imageRequest = remember(normalizedSource) {
+        if (resolvedSource.isNotBlank()) {
+            val imageRequest = remember(resolvedSource) {
                 ImageRequest.Builder(context)
-                    .data(normalizedSource)
+                    .data(resolveCoilDataModel(resolvedSource))
                     .crossfade(300)
                     .build()
             }
@@ -128,7 +160,7 @@ fun ExerciseGifPlayer(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(0xFF161618)),
+                            .background(Color.White),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
@@ -150,7 +182,7 @@ fun ExerciseGifPlayer(
 
 /**
  * Miniatura circular estilizada idéntica a Hevy:
- * Recortada en CircleShape con fondo oscuro y Coil AsyncImage (ContentScale.Crop).
+ * Recortada en CircleShape con fondo blanco limpio para modelos 3D y Coil AsyncImage (ContentScale.Crop).
  */
 @Composable
 fun ExerciseThumbnail(
@@ -167,14 +199,14 @@ fun ExerciseThumbnail(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(Color(0xFF1E1E22))
+            .background(if (normalizedSource.isNotBlank()) Color.White else Color(0xFF1E1E22))
             .border(1.dp, Color(0xFF2C2C34), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         if (normalizedSource.isNotBlank()) {
-            AsyncImage(
+            SubcomposeAsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(normalizedSource)
+                    .data(resolveCoilDataModel(normalizedSource))
                     .crossfade(true)
                     .build(),
                 imageLoader = imageLoader,
@@ -182,7 +214,29 @@ fun ExerciseThumbnail(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(CircleShape)
+                    .clip(CircleShape),
+                loading = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFF161618)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(size * 0.45f)
+                        )
+                    }
+                },
+                error = {
+                    Icon(
+                        imageVector = Icons.Default.FitnessCenter,
+                        contentDescription = contentDescription,
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                        modifier = Modifier.size(size * 0.52f)
+                    )
+                }
             )
         } else {
             Icon(
@@ -203,24 +257,14 @@ fun ExercisePlayerPlaceholder(
     exerciseName: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val alphaAnim by infiniteTransition.animateFloat(
-        initialValue = 0.7f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "alpha"
-    )
-
     Box(
         modifier = modifier
             .fillMaxSize()
+            .clip(RoundedCornerShape(16.dp))
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        Color(0xFF1A1A22),
+                        Color(0xFF1C1C22),
                         Color(0xFF121216)
                     )
                 )
@@ -229,27 +273,23 @@ fun ExercisePlayerPlaceholder(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(24.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                    .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), CircleShape),
-                contentAlignment = Alignment.Center
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
             ) {
-                Icon(
-                    imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .size(38.dp)
-                        .alpha(alphaAnim)
+                Text(
+                    text = "GUÍA DE EJECUCIÓN ANATÓMICA",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = exerciseName ?: "Demostración Técnica",
@@ -258,10 +298,10 @@ fun ExercisePlayerPlaceholder(
                 color = Color.White
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Animación y guía muscular 3D",
+                text = "Ilustración de biomecánica y recorrido",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

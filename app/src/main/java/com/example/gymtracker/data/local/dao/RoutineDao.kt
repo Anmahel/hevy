@@ -40,7 +40,10 @@ interface RoutineDao {
             RoutineExerciseEntity(
                 routineId = routineId,
                 exerciseId = exerciseId,
-                orderIndex = index
+                orderIndex = index,
+                exerciseOrder = index,
+                targetSets = 3,
+                targetRepRange = "8-12 reps"
             )
         }
         insertRoutineExercises(crossRefs)
@@ -48,10 +51,33 @@ interface RoutineDao {
     }
 
     /**
-     * Lista todas las rutinas completas con sus ejercicios asociados (utilizando Junction).
+     * Inserta una rutina con ejercicios detallados (exerciseOrder, targetSets, targetRepRange).
      */
     @Transaction
-    @Query("SELECT * FROM routines ORDER BY createdAt DESC")
+    suspend fun insertRoutineWithDetailedExercises(
+        routine: RoutineEntity,
+        exercisesSpec: List<Triple<Long, Int, String>>
+    ): Long {
+        val routineId = insertRoutine(routine)
+        val crossRefs = exercisesSpec.mapIndexed { index, (exerciseId, targetSets, targetRepRange) ->
+            RoutineExerciseEntity(
+                routineId = routineId,
+                exerciseId = exerciseId,
+                orderIndex = index,
+                exerciseOrder = index,
+                targetSets = targetSets,
+                targetRepRange = targetRepRange
+            )
+        }
+        insertRoutineExercises(crossRefs)
+        return routineId
+    }
+
+    /**
+     * Lista todas las rutinas completas con sus ejercicios asociados (utilizando Junction), ordenadas por sortOrder ASC.
+     */
+    @Transaction
+    @Query("SELECT * FROM routines ORDER BY sortOrder ASC, id ASC")
     fun getAllRoutinesWithExercises(): Flow<List<RoutineWithExercises>>
 
     /**
@@ -62,14 +88,14 @@ interface RoutineDao {
     fun getRoutineWithExercises(routineId: Long): Flow<RoutineWithExercises?>
 
     /**
-     * Lista rutinas preservando el orden exacto (orderIndex) de cada ejercicio.
+     * Lista rutinas ordenadas estrictamente por sortOrder ASC preservando exerciseOrder ASC.
      */
     @Transaction
-    @Query("SELECT * FROM routines ORDER BY createdAt DESC")
+    @Query("SELECT * FROM routines ORDER BY sortOrder ASC, id ASC")
     fun getAllRoutinesWithOrderedExercises(): Flow<List<RoutineWithOrderedExercises>>
 
     /**
-     * Obtiene una rutina específica con sus ejercicios ordenados por orderIndex.
+     * Obtiene una rutina específica con sus ejercicios ordenados por exerciseOrder.
      */
     @Transaction
     @Query("SELECT * FROM routines WHERE id = :routineId LIMIT 1")
@@ -83,6 +109,9 @@ interface RoutineDao {
 
     @Query("SELECT * FROM routines WHERE LOWER(title) = LOWER(:title) LIMIT 1")
     suspend fun getRoutineByTitle(title: String): RoutineEntity?
+
+    @Query("SELECT * FROM routines WHERE title LIKE :dayPrefix || '%' LIMIT 1")
+    suspend fun getRoutineByDayPrefix(dayPrefix: String): RoutineEntity?
 
     @Query("DELETE FROM routine_exercises WHERE routineId = :routineId")
     suspend fun deleteRoutineExercisesByRoutineId(routineId: Long)
@@ -101,7 +130,33 @@ interface RoutineDao {
             RoutineExerciseEntity(
                 routineId = routine.id,
                 exerciseId = exerciseId,
-                orderIndex = index
+                orderIndex = index,
+                exerciseOrder = index,
+                targetSets = 3,
+                targetRepRange = "8-12 reps"
+            )
+        }
+        insertRoutineExercises(crossRefs)
+    }
+
+    /**
+     * Actualiza una rutina existente con especificaciones detalladas de series y repeticiones por ejercicio.
+     */
+    @Transaction
+    suspend fun updateRoutineWithDetailedExercises(
+        routine: RoutineEntity,
+        exercisesSpec: List<Triple<Long, Int, String>>
+    ) {
+        updateRoutine(routine)
+        deleteRoutineExercisesByRoutineId(routine.id)
+        val crossRefs = exercisesSpec.mapIndexed { index, (exerciseId, targetSets, targetRepRange) ->
+            RoutineExerciseEntity(
+                routineId = routine.id,
+                exerciseId = exerciseId,
+                orderIndex = index,
+                exerciseOrder = index,
+                targetSets = targetSets,
+                targetRepRange = targetRepRange
             )
         }
         insertRoutineExercises(crossRefs)

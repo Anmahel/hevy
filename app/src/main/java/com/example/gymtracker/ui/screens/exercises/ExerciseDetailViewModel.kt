@@ -5,12 +5,17 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.gymtracker.data.local.entity.ExerciseEntity
 import com.example.gymtracker.data.local.entity.WorkoutSetEntity
+import com.example.gymtracker.data.preset.ExerciseImageProvider
 import com.example.gymtracker.domain.repository.ExerciseRepository
+import com.example.gymtracker.domain.repository.WeightRepository
 import com.example.gymtracker.domain.repository.WorkoutRepository
+import com.example.gymtracker.domain.util.RpgGamificationEngine
+import com.example.gymtracker.domain.util.StrengthRankInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -29,19 +34,24 @@ data class ExerciseHistoryEntry(
 data class ExerciseDetailUiState(
     val isLoading: Boolean = true,
     val exercise: ExerciseEntity? = null,
+    val isEditDialogOpen: Boolean = false,
     val selectedTab: Int = 0, // 0 = Resumen, 1 = Historial, 2 = Instrucciones
     val maxWeightKg: Double = 0.0,
     val bestOneRepMaxKg: Double = 0.0,
     val maxVolumeKg: Double = 0.0,
     val totalCompletedSetsCount: Int = 0,
     val historySessions: List<ExerciseHistoryEntry> = emptyList(),
-    val instructionsList: List<String> = emptyList()
+    val instructionsList: List<String> = emptyList(),
+    // Módulo 4: Rango de Fuerza Competitivo (Bronce..Titán)
+    val strengthRankInfo: StrengthRankInfo? = null,
+    val currentBodyweightKg: Double = 75.0
 )
 
 class ExerciseDetailViewModel(
     private val exerciseId: Long,
     private val exerciseRepository: ExerciseRepository,
-    private val workoutRepository: WorkoutRepository
+    private val workoutRepository: WorkoutRepository,
+    private val weightRepository: WeightRepository? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExerciseDetailUiState())
@@ -53,10 +63,12 @@ class ExerciseDetailViewModel(
 
     private fun loadExerciseAndStats() {
         viewModelScope.launch {
+            val weightLogsFlow = weightRepository?.getAllWeightLogs() ?: flowOf(emptyList())
             combine(
                 exerciseRepository.getExerciseFlowById(exerciseId),
-                workoutRepository.getWorkoutHistory()
-            ) { exerciseEntity, history ->
+                workoutRepository.getWorkoutHistory(),
+                weightLogsFlow
+            ) { exerciseEntity, history, weightLogs ->
                 if (exerciseEntity == null) {
                     _uiState.update { it.copy(isLoading = false, exercise = null) }
                     return@combine
@@ -85,11 +97,7 @@ class ExerciseDetailViewModel(
                             if (set.weightKg > sessionMaxWeight) sessionMaxWeight = set.weightKg
                             if (set.weightKg > globalMaxWeight) globalMaxWeight = set.weightKg
 
-                            val est1Rm = if (set.reps > 1) {
-                                set.weightKg * (1.0 + set.reps / 30.0)
-                            } else {
-                                set.weightKg
-                            }
+                            val est1Rm = RpgGamificationEngine.calculateOneRepMax(set.weightKg, set.reps)
                             if (est1Rm > globalBest1Rm) globalBest1Rm = est1Rm
 
                             sessionVolume += (set.weightKg * set.reps)
@@ -111,11 +119,23 @@ class ExerciseDetailViewModel(
                     }
                 }
 
+                val currentBw = weightLogs.firstOrNull()?.weightKg?.toDouble() ?: 75.0
+                val rankInfo = RpgGamificationEngine.calculateStrengthRank(
+                    exerciseId = exerciseEntity.id,
+                    exerciseName = exerciseEntity.name,
+                    muscleGroup = exerciseEntity.primaryMuscle.ifBlank { exerciseEntity.muscleGroup },
+                    bestOneRepMaxKg = globalBest1Rm,
+                    bodyweightKg = currentBw
+                )
+
                 val instructions = if (exerciseEntity.instructions.isNotBlank()) {
-                    exerciseEntity.instructions
-                        .split("\n", ". ")
-                        .map { it.trim() }
-                        .filter { it.isNotBlank() }
+                    val raw = exerciseEntity.instructions
+                    val splitLines = if (raw.contains("\n")) {
+                        raw.split("\n")
+                    } else {
+                        raw.split(". ")
+                    }
+                    splitLines.map { it.trim() }.filter { it.isNotBlank() }
                 } else {
                     getDefaultInstructionsFor(exerciseEntity.name, exerciseEntity.muscleGroup)
                 }
@@ -129,7 +149,9 @@ class ExerciseDetailViewModel(
                         maxVolumeKg = globalMaxVolume,
                         totalCompletedSetsCount = totalCompletedSets,
                         historySessions = historyEntries,
-                        instructionsList = instructions
+                        instructionsList = instructions,
+                        strengthRankInfo = rankInfo,
+                        currentBodyweightKg = currentBw
                     )
                 }
             }.collect {}
@@ -138,6 +160,60 @@ class ExerciseDetailViewModel(
 
     fun selectTab(index: Int) {
         _uiState.update { it.copy(selectedTab = index) }
+    }
+
+    fun openEditDialog() {
+        _uiState.update { it.copy(isEditDialogOpen = true) }
+    }
+
+    fun closeEditDialog() {
+        _uiState.update { it.copy(isEditDialogOpen = false) }
+    }
+
+    fun updateExerciseDetails(
+        name: String,
+        primaryMuscle: String,
+        secondaryMuscles: String,
+        equipment: String,
+        mediaUrlOrPath: String,
+        defaultRestSeconds: Int
+    ) {
+        val current = _uiState.value.exercise ?: return
+        if (name.isBlank()) return
+        viewModelScope.launch {
+            val cleanName = name.trim()
+            val cleanPrimary = primaryMuscle.trim()
+            val cleanSecondary = secondaryMuscles.trim()
+            val cleanEquipment = equipment.trim()
+            val validRest = if (defaultRestSeconds > 0) defaultRestSeconds else 90
+            val resolvedMedia = mediaUrlOrPath.trim().ifBlank {
+                current.gifPathOrUrl.ifBlank { current.thumbnailUrl }
+                    .ifBlank { ExerciseImageProvider.getImageUrlForExercise(cleanName, cleanPrimary) }
+            }
+
+            val updated = current.copy(
+                name = cleanName,
+                muscleGroup = cleanPrimary,
+                primaryMuscle = cleanPrimary,
+                secondaryMuscles = cleanSecondary,
+                equipment = cleanEquipment,
+                defaultRestSeconds = validRest,
+                gifPathOrUrl = resolvedMedia,
+                thumbnailUrl = resolvedMedia
+            )
+            exerciseRepository.updateExercise(updated)
+            _uiState.update { it.copy(isEditDialogOpen = false) }
+        }
+    }
+
+    fun updatePinnedNote(note: String) {
+        viewModelScope.launch {
+            try {
+                exerciseRepository.updatePinnedNote(exerciseId, note)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun getDefaultInstructionsFor(name: String, muscleGroup: String): List<String> {
@@ -153,11 +229,17 @@ class ExerciseDetailViewModel(
     class Factory(
         private val exerciseId: Long,
         private val exerciseRepository: ExerciseRepository,
-        private val workoutRepository: WorkoutRepository
+        private val workoutRepository: WorkoutRepository,
+        private val weightRepository: WeightRepository? = null
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return ExerciseDetailViewModel(exerciseId, exerciseRepository, workoutRepository) as T
+            return ExerciseDetailViewModel(
+                exerciseId = exerciseId,
+                exerciseRepository = exerciseRepository,
+                workoutRepository = workoutRepository,
+                weightRepository = weightRepository
+            ) as T
         }
     }
 }

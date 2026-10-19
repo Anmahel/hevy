@@ -67,27 +67,65 @@ class RoutineListViewModel(
         onWorkoutStarted: (Long) -> Unit
     ) {
         viewModelScope.launch {
-            val workout = Workout(
-                title = routineWithExercises.routine.title,
-                startTimeMillis = System.currentTimeMillis()
-            )
-            val newWorkoutId = gymRepository.insertWorkout(workout)
-
-            // Insert initial default sets for each exercise in the routine
-            routineWithExercises.sortedExercises.forEach { exercise ->
-                val initialSet = WorkoutSet(
-                    workoutId = newWorkoutId,
-                    exerciseId = exercise.id,
-                    exerciseName = exercise.name,
-                    setNumber = 1,
-                    weightKg = 0.0,
-                    reps = 10,
-                    isCompleted = false
+            try {
+                val routineTitle = routineWithExercises.routine.title
+                val startTimestamp = System.currentTimeMillis()
+                val workout = Workout(
+                    title = routineTitle,
+                    startTimeMillis = startTimestamp
                 )
-                gymRepository.insertSet(initialSet)
-            }
+                val newWorkoutId = gymRepository.insertWorkout(workout)
 
-            onWorkoutStarted(newWorkoutId)
+                // Insertar la cantidad exacta de series (3 o 2 según corresponda) en orden estricto exerciseOrder ASC
+                routineWithExercises.sortedRoutineExercises.forEachIndexed { index, item ->
+                    try {
+                        val exercise = item.exercise
+                        val preset = com.example.gymtracker.data.preset.DefaultRoutinesData.findExercisePreset(
+                            routineTitle = routineTitle,
+                            exerciseName = exercise.name
+                        )
+                        val setsCount = (preset?.targetSets ?: item.routineExercise.targetSets).coerceAtLeast(1)
+                        val repRange = preset?.targetRepRange
+                            ?: item.routineExercise.targetRepRange.ifBlank { "8-12 reps" }
+
+                        for (setNum in 1..setsCount) {
+                            val initialSet = WorkoutSet(
+                                workoutId = newWorkoutId,
+                                exerciseId = exercise.id,
+                                exerciseName = exercise.name,
+                                setNumber = setNum,
+                                weightKg = 0.0,
+                                reps = 0,
+                                isCompleted = false,
+                                exerciseOrder = index,
+                                targetRepRange = repRange
+                            )
+                            gymRepository.insertSet(initialSet)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+
+                // Persistir inmediatamente el entrenamiento activo para protección contra cierre en segundo plano
+                com.example.gymtracker.data.local.ActiveWorkoutSessionStore.saveState(
+                    workoutId = newWorkoutId,
+                    routineId = routineWithExercises.routine.id,
+                    title = routineTitle,
+                    startTimestamp = startTimestamp,
+                    restTimerActive = false,
+                    restTimerExpanded = false,
+                    restTimerStartTimestamp = 0L,
+                    restTimerTotalSeconds = 90,
+                    supersetPairs = emptyMap(),
+                    focusedExerciseId = null,
+                    workoutWithSets = null
+                )
+
+                onWorkoutStarted(newWorkoutId)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

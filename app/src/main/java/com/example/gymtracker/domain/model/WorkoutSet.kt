@@ -18,5 +18,7 @@ data class WorkoutSet(
     val isCompleted: Boolean = false,
     val rpe: Double? = null,
     val setType: SetType = SetType.NORMAL,
-    val previousRecord: String = "-"
+    val previousRecord: String = "-",
+    val exerciseOrder: Int = 0,
+    val targetRepRange: String = ""
 )

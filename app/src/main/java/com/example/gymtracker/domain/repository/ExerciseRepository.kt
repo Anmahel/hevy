@@ -39,6 +39,8 @@ interface ExerciseRepository {
      */
     suspend fun updateExercise(exercise: ExerciseEntity)
 
+    suspend fun updatePinnedNote(exerciseId: Long, pinnedNote: String)
+
     /**
      * Elimina un ejercicio.
      */

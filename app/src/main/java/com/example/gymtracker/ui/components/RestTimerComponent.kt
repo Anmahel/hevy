@@ -67,36 +67,51 @@ import androidx.compose.ui.unit.dp
 import java.util.Locale
 
 /**
- * Triggers sporty vibration feedback using both Android Vibrator and Jetpack Compose Haptics.
+ * Triggers native sporty vibration and short notification beep when rest timer reaches 00:00:
+ * - Native Vibrator / VibratorManager with VibrationEffect.createWaveform(longArrayOf(0, 250, 100, 250), -1)
+ * - Short sporty beep via android.media.ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100) (TONE_PROP_BEEP2)
  */
-fun triggerRestHaptic(context: Context, haptic: HapticFeedback) {
+fun triggerRestHaptic(context: Context, haptic: HapticFeedback? = null) {
+    // 1. Native Vibration
     try {
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        haptic?.performHapticFeedback(HapticFeedbackType.LongPress)
+        val waveformPattern = longArrayOf(0, 250, 100, 250)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
             vibratorManager?.defaultVibrator?.let { vibrator ->
-                val effect = VibrationEffect.createWaveform(
-                    longArrayOf(0, 180, 100, 180, 100, 320),
-                    -1
-                )
+                val effect = VibrationEffect.createWaveform(waveformPattern, -1)
                 vibrator.vibrate(effect)
             }
         } else {
             @Suppress("DEPRECATION")
             val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val effect = VibrationEffect.createWaveform(
-                    longArrayOf(0, 180, 100, 180, 100, 320),
-                    -1
-                )
+                val effect = VibrationEffect.createWaveform(waveformPattern, -1)
                 vibrator?.vibrate(effect)
             } else {
                 @Suppress("DEPRECATION")
-                vibrator?.vibrate(longArrayOf(0, 180, 100, 180, 100, 320), -1)
+                vibrator?.vibrate(waveformPattern, -1)
             }
         }
     } catch (_: Exception) {
         // Fallback safely if device vibrator service is restricted
+    }
+
+    // 2. Native Sporty Audio Beep (without external audio files)
+    try {
+        val toneGenerator = android.media.ToneGenerator(
+            android.media.AudioManager.STREAM_NOTIFICATION,
+            100
+        )
+        toneGenerator.startTone(android.media.ToneGenerator.TONE_PROP_BEEP2, 350)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            try {
+                toneGenerator.release()
+            } catch (_: Exception) {
+            }
+        }, 450L)
+    } catch (_: Exception) {
+        // Fallback safely if audio hardware is unavailable in test/headless environment
     }
 }
 

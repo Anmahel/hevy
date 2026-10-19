@@ -37,6 +37,10 @@ class ExerciseRepositoryImpl(
         exerciseDao.updateExercise(exercise)
     }
 
+    override suspend fun updatePinnedNote(exerciseId: Long, pinnedNote: String) {
+        exerciseDao.updatePinnedNote(exerciseId, pinnedNote)
+    }
+
     override suspend fun deleteExercise(exercise: ExerciseEntity) {
         exerciseDao.deleteExercise(exercise)
     }

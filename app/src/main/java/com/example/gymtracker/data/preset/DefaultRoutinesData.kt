@@ -1,22 +1,27 @@
 package com.example.gymtracker.data.preset
 
 /**
- * Modelo para definir un ejercicio dentro de una rutina predefinida.
+ * Modelo para definir un ejercicio dentro de una rutina predefinida con su orden inmutable,
+ * cantidad de series pre-creadas y rango de repeticiones objetivo.
  */
 data class RoutineExercisePreset(
     val order: Int,
+    val exerciseOrder: Int = order - 1,
     val name: String,
     val type: String, // "Compuesto", "Aislamiento", "Compuesto accesorio"
     val muscleGroup: String,
     val equipment: String,
+    val targetSets: Int,
+    val targetRepRange: String, // ej. "6-8 reps"
     val technique: String
 )
 
 /**
- * Modelo para definir una rutina completa del plan día a día.
+ * Modelo para definir una rutina completa del plan día a día con sortOrder estricto (1 al 6).
  */
 data class RoutinePreset(
     val dayNumber: Int,
+    val sortOrder: Int = dayNumber,
     val title: String,
     val focusDescription: String,
     val exercises: List<RoutineExercisePreset>
@@ -25,378 +30,509 @@ data class RoutinePreset(
 object DefaultRoutinesData {
 
     val allPresets: List<RoutinePreset> = listOf(
-        // DÍA 1 — Empuje A (Pecho prioritario)
+        // --- DÍA 1 (sortOrder = 1) ---
         RoutinePreset(
             dayNumber = 1,
-            title = "Día 1 — Empuje A (Pecho prioritario)",
-            focusDescription = "Pectoral prioritario. Enfoque en compuestos pesados primero y congestión de aislamiento al final.",
+            sortOrder = 1,
+            title = "Día 1 — Empuje A (Pecho, hombros y tríceps)",
+            focusDescription = "Pecho, hombros y tríceps. Trabajo estructurado por grupo muscular con series y rango de repeticiones exacto.",
             exercises = listOf(
                 RoutineExercisePreset(
                     order = 1,
+                    exerciseOrder = 0,
                     name = "Press de banca plano con barra",
                     type = "Compuesto",
-                    muscleGroup = "Pectoral mayor",
+                    muscleGroup = "Pecho",
                     equipment = "Barra",
-                    technique = "Pirámide Invertida: Serie 1 pesada (6–8 reps) y 2 series de bajada (-10%)."
+                    targetSets = 3,
+                    targetRepRange = "6-8 reps",
+                    technique = "Pirámide Invertida: 3 series | Meta: 6 a 8 reps. Serie 1 pesada y 2 series de bajada (-10%)."
                 ),
                 RoutineExercisePreset(
                     order = 2,
-                    name = "Press militar con mancuernas",
-                    type = "Compuesto",
-                    muscleGroup = "Deltoides anterior/lateral",
-                    equipment = "Mancuerna",
-                    technique = "Series Lineales: Mantén peso fijo para 8–10 reps con 2 min de descanso."
+                    exerciseOrder = 1,
+                    name = "Cruces en polea alta",
+                    type = "Aislamiento",
+                    muscleGroup = "Pecho",
+                    equipment = "Polea",
+                    targetSets = 2,
+                    targetRepRange = "10-15 reps",
+                    technique = "Drop Set en la última serie: 2 series | Meta: 10 a 15 reps. En la serie 2, reduce el pin un 30%."
                 ),
                 RoutineExercisePreset(
                     order = 3,
-                    name = "Press de banca agarre cerrado",
+                    exerciseOrder = 2,
+                    name = "Press militar con mancuernas sentado",
                     type = "Compuesto",
-                    muscleGroup = "Tríceps braquial",
-                    equipment = "Barra",
-                    technique = "Pirámide Invertida: Serie 1 fuerte (8 reps) y Serie 2 con -10% (10 reps)."
+                    muscleGroup = "Hombros",
+                    equipment = "Mancuerna",
+                    targetSets = 2,
+                    targetRepRange = "8-10 reps",
+                    technique = "Series Lineales: 2 series | Meta: 8 a 10 reps con peso controlado y 2 min de descanso."
                 ),
                 RoutineExercisePreset(
                     order = 4,
-                    name = "Cruces en polea alta",
+                    exerciseOrder = 3,
+                    name = "Elevaciones laterales con mancuernas",
                     type = "Aislamiento",
-                    muscleGroup = "Pectoral bajo/interno",
-                    equipment = "Polea",
-                    technique = "Drop Set en la última serie: En la serie 2, reduce el pin un 30% y saca 5 reps extra."
+                    muscleGroup = "Hombros",
+                    equipment = "Mancuerna",
+                    targetSets = 2,
+                    targetRepRange = "12-20 reps",
+                    technique = "Series Lineales: 2 series | Meta: 12 a 20 reps estrictas; no balancear el torso."
                 ),
                 RoutineExercisePreset(
                     order = 5,
-                    name = "Elevaciones laterales",
-                    type = "Aislamiento",
-                    muscleGroup = "Deltoides lateral",
-                    equipment = "Mancuerna",
-                    technique = "Series Lineales: Carga moderada estricta (12–15 reps); no balancear el torso."
+                    exerciseOrder = 4,
+                    name = "Press de banca con agarre cerrado",
+                    type = "Compuesto",
+                    muscleGroup = "Tríceps",
+                    equipment = "Barra",
+                    targetSets = 2,
+                    targetRepRange = "8-10 reps",
+                    technique = "Pirámide Invertida: 2 series | Meta: 8 a 10 reps enfocando codos cerca del torso."
                 ),
                 RoutineExercisePreset(
                     order = 6,
-                    name = "Extensión de tríceps en polea/máquina",
+                    exerciseOrder = 5,
+                    name = "Extensión de tríceps en polea o máquina",
                     type = "Aislamiento",
                     muscleGroup = "Tríceps",
                     equipment = "Polea",
-                    technique = "Drop Set en la última serie: Remate final al fallo, baja placas inmediatamente."
+                    targetSets = 2,
+                    targetRepRange = "10-15 reps",
+                    technique = "Drop Set en la última serie: 2 series | Meta: 10 a 15 reps al fallo técnico."
                 )
             )
         ),
 
-        // DÍA 2 — Tirón A (Espalda y bíceps)
+        // --- DÍA 2 (sortOrder = 2) ---
         RoutinePreset(
             dayNumber = 2,
-            title = "Día 2 — Tirón A (Espalda y bíceps)",
-            focusDescription = "Espalda y bíceps. Trabajo compuesto de tracción vertical y horizontal seguido de trabajo directo de brazos y core.",
+            sortOrder = 2,
+            title = "Día 2 — Tirón A (Espalda, bíceps y abdomen)",
+            focusDescription = "Espalda, bíceps y abdomen. Tracción vertical y horizontal seguida de flexores de codo y core.",
             exercises = listOf(
                 RoutineExercisePreset(
                     order = 1,
-                    name = "Jalón al pecho prono",
+                    exerciseOrder = 0,
+                    name = "Jalón al pecho con agarre prono",
                     type = "Compuesto",
-                    muscleGroup = "Dorsal ancho",
+                    muscleGroup = "Espalda",
                     equipment = "Polea",
-                    technique = "Pirámide Invertida: Serie 1 pesada a 8 reps, series 2 y 3 bajando 1 placa (10–12 reps)."
+                    targetSets = 3,
+                    targetRepRange = "8-12 reps",
+                    technique = "Pirámide Invertida: 3 series | Meta: 8 a 12 reps controlando el estiramiento dorsal."
                 ),
                 RoutineExercisePreset(
                     order = 2,
-                    name = "Remo sentado en polea (agarre V)",
+                    exerciseOrder = 1,
+                    name = "Remo sentado en polea con agarre en V",
                     type = "Compuesto",
-                    muscleGroup = "Espalda media / Romboides",
+                    muscleGroup = "Espalda",
                     equipment = "Polea",
-                    technique = "Series Lineales: Peso controlado para 8–10 reps pausando 1 segundo al estirar."
+                    targetSets = 3,
+                    targetRepRange = "8-12 reps",
+                    technique = "Series Lineales: 3 series | Meta: 8 a 12 reps pausando 1 segundo en contracción."
                 ),
                 RoutineExercisePreset(
                     order = 3,
+                    exerciseOrder = 2,
                     name = "Curl en banco Scott con barra EZ",
                     type = "Aislamiento",
-                    muscleGroup = "Bíceps (cabeza corta)",
+                    muscleGroup = "Bíceps",
                     equipment = "Barra",
-                    technique = "Series Lineales: Peso fijo estricto (10–12 reps) sin despegar codos del cojín."
+                    targetSets = 3,
+                    targetRepRange = "10-12 reps",
+                    technique = "Series Lineales: 3 series | Meta: 10 a 12 reps sin despegar codos del cojín."
                 ),
                 RoutineExercisePreset(
                     order = 4,
-                    name = "Curl martillo con mancuernas",
+                    exerciseOrder = 3,
+                    name = "Curl martillo alterno con mancuernas",
                     type = "Aislamiento",
-                    muscleGroup = "Braquial y antebrazo",
+                    muscleGroup = "Bíceps",
                     equipment = "Mancuerna",
-                    technique = "Drop Set en la última serie: Termina serie 2, suelta las mancuernas y toma otras un 30% más livianas."
+                    targetSets = 2,
+                    targetRepRange = "10-15 reps",
+                    technique = "Drop Set en la última serie: 2 series | Meta: 10 a 15 reps para braquial y antebrazo."
                 ),
                 RoutineExercisePreset(
                     order = 5,
+                    exerciseOrder = 4,
                     name = "Crunch abdominal en máquina",
                     type = "Aislamiento",
-                    muscleGroup = "Recto abdominal",
+                    muscleGroup = "Core",
                     equipment = "Máquina",
-                    technique = "Series Lineales: Controla la fase excéntrica (bajada lenta) a 12–15 reps."
+                    targetSets = 3,
+                    targetRepRange = "12-15 reps",
+                    technique = "Series Lineales: 3 series | Meta: 12 a 15 reps controlando la fase excéntrica."
                 )
             )
         ),
 
-        // DÍA 3 — Pierna A (Cuádriceps y cadena posterior)
+        // --- DÍA 3 (sortOrder = 3) ---
         RoutinePreset(
             dayNumber = 3,
+            sortOrder = 3,
             title = "Día 3 — Pierna A (Cuádriceps y cadena posterior)",
-            focusDescription = "Cuádriceps y cadena posterior. Fuerza pesada en máquina y estabilidad postural.",
+            focusDescription = "Cuádriceps y cadena posterior. Fuerza pesada en máquina, bisagra de cadera y pantorrillas.",
             exercises = listOf(
                 RoutineExercisePreset(
                     order = 1,
-                    name = "Sentadilla en Smith",
+                    exerciseOrder = 0,
+                    name = "Sentadilla en máquina Smith",
                     type = "Compuesto",
-                    muscleGroup = "Cuádriceps y glúteo",
+                    muscleGroup = "Cuádriceps",
                     equipment = "Máquina",
-                    technique = "Pirámide Invertida: Calienta bien. Serie 1 pesada (8 reps), series 2 y 3 con -10% de peso."
+                    targetSets = 3,
+                    targetRepRange = "8-10 reps",
+                    technique = "Pirámide Invertida: 3 series | Meta: 8 a 10 reps profundas y controladas."
                 ),
                 RoutineExercisePreset(
                     order = 2,
+                    exerciseOrder = 1,
                     name = "Prensa inclinada a 45°",
                     type = "Compuesto",
-                    muscleGroup = "Cuádriceps y glúteo",
+                    muscleGroup = "Cuádriceps",
                     equipment = "Máquina",
-                    technique = "Pirámide Invertida: Serie 1 a 10 reps, reduce 1 o 2 discos por lado para series 2 y 3."
+                    targetSets = 3,
+                    targetRepRange = "10-12 reps",
+                    technique = "Pirámide Invertida: 3 series | Meta: 10 a 12 reps sin bloquear rodillas."
                 ),
                 RoutineExercisePreset(
                     order = 3,
+                    exerciseOrder = 2,
                     name = "Peso muerto rumano",
                     type = "Compuesto",
-                    muscleGroup = "Isquiotibiales y glúteos",
+                    muscleGroup = "Isquiotibiales y Glúteo",
                     equipment = "Barra",
-                    technique = "Pirámide Creciente: Empieza con peso moderado y sube en la serie 2 para asegurar la postura lumbar."
+                    targetSets = 2,
+                    targetRepRange = "8-12 reps",
+                    technique = "Series Lineales: 2 series | Meta: 8 a 12 reps manteniendo columna neutra."
                 ),
                 RoutineExercisePreset(
                     order = 4,
-                    name = "Curl femoral tumbado",
+                    exerciseOrder = 3,
+                    name = "Curl femoral tumbado en máquina",
                     type = "Aislamiento",
                     muscleGroup = "Isquiotibiales",
                     equipment = "Máquina",
-                    technique = "Drop Set en la última serie: En la serie 3, quita 2 placas inmediatamente al fallar."
+                    targetSets = 3,
+                    targetRepRange = "10-15 reps",
+                    technique = "Drop Set en la última serie: 3 series | Meta: 10 a 15 reps pegando cadera al banco."
                 ),
                 RoutineExercisePreset(
                     order = 5,
-                    name = "Elevaciones de gemelos",
+                    exerciseOrder = 4,
+                    name = "Elevaciones de gemelos (pantorrilla)",
                     type = "Aislamiento",
                     muscleGroup = "Pantorrillas",
                     equipment = "Máquina",
-                    technique = "Series Lineales con pausa: 3 series con pausa de 2 segundos en el fondo del estiramiento."
+                    targetSets = 3,
+                    targetRepRange = "12-20 reps",
+                    technique = "Series Lineales con pausa: 3 series | Meta: 12 a 20 reps con 2 seg en estiramiento."
                 )
             )
         ),
 
-        // DÍA 4 — Empuje B (Pecho, hombros y tríceps)
+        // --- DÍA 4 (sortOrder = 4) ---
         RoutinePreset(
             dayNumber = 4,
+            sortOrder = 4,
             title = "Día 4 — Empuje B (Pecho, hombros y tríceps)",
             focusDescription = "Pecho superior, hombros y tríceps. Estímulo hipertrófico y congestión metabólica.",
             exercises = listOf(
                 RoutineExercisePreset(
                     order = 1,
+                    exerciseOrder = 0,
                     name = "Press inclinado con mancuernas",
                     type = "Compuesto",
-                    muscleGroup = "Pectoral superior",
+                    muscleGroup = "Pecho",
                     equipment = "Mancuerna",
-                    technique = "Pirámide Invertida: Serie 1 pesada a 8 reps; series 2 y 3 bajando 2 kg por mancuerna."
+                    targetSets = 3,
+                    targetRepRange = "8-10 reps",
+                    technique = "Pirámide Invertida: 3 series | Meta: 8 a 10 reps enfocando haz clavicular."
                 ),
                 RoutineExercisePreset(
                     order = 2,
+                    exerciseOrder = 1,
                     name = "Press de pecho en máquina",
                     type = "Compuesto",
-                    muscleGroup = "Pectoral medio",
+                    muscleGroup = "Pecho",
                     equipment = "Máquina",
-                    technique = "Series Lineales: 2 series de 10 reps pesadas y estables."
+                    targetSets = 2,
+                    targetRepRange = "8-12 reps",
+                    technique = "Series Lineales: 2 series | Meta: 8 a 12 reps pesadas y estables."
                 ),
                 RoutineExercisePreset(
                     order = 3,
-                    name = "Press de hombros en máquina",
-                    type = "Compuesto",
-                    muscleGroup = "Deltoides",
+                    exerciseOrder = 2,
+                    name = "Peck Deck en máquina",
+                    type = "Aislamiento",
+                    muscleGroup = "Pecho",
                     equipment = "Máquina",
-                    technique = "Series Lineales: 2 series de 10 reps controlando la bajada."
+                    targetSets = 2,
+                    targetRepRange = "10-15 reps",
+                    technique = "Drop Set en la última serie: 2 series | Meta: 10 a 15 reps apretando 1 seg en el centro."
                 ),
                 RoutineExercisePreset(
                     order = 4,
-                    name = "Fondos en máquina asistida",
+                    exerciseOrder = 3,
+                    name = "Press de hombros en máquina",
                     type = "Compuesto",
-                    muscleGroup = "Tríceps y pectoral bajo",
+                    muscleGroup = "Hombros",
                     equipment = "Máquina",
-                    technique = "Series Lineales: Ajusta contrapeso para 8–10 reps limpias."
+                    targetSets = 2,
+                    targetRepRange = "8-10 reps",
+                    technique = "Series Lineales: 2 series | Meta: 8 a 10 reps controlando la bajada."
                 ),
                 RoutineExercisePreset(
                     order = 5,
-                    name = "Peck Deck en máquina",
+                    exerciseOrder = 4,
+                    name = "Elevaciones laterales con mancuernas",
                     type = "Aislamiento",
-                    muscleGroup = "Pectoral medio/interno",
-                    equipment = "Máquina",
-                    technique = "Drop Set en la última serie: En serie 2, reduce el pin y saca 4–6 reps adicionales."
+                    muscleGroup = "Hombros",
+                    equipment = "Mancuerna",
+                    targetSets = 2,
+                    targetRepRange = "12-20 reps",
+                    technique = "Series Lineales: 2 series | Meta: 12 a 20 reps buscando congestión lateral."
                 ),
                 RoutineExercisePreset(
                     order = 6,
-                    name = "Elevaciones laterales",
-                    type = "Aislamiento",
-                    muscleGroup = "Deltoides lateral",
-                    equipment = "Mancuerna",
-                    technique = "Series Lineales: 12–15 reps buscando quemazón local."
+                    exerciseOrder = 5,
+                    name = "Fondos en máquina asistida",
+                    type = "Compuesto",
+                    muscleGroup = "Tríceps",
+                    equipment = "Máquina",
+                    targetSets = 2,
+                    targetRepRange = "8-10 reps",
+                    technique = "Series Lineales: 2 series | Meta: 8 a 10 reps limpias."
                 ),
                 RoutineExercisePreset(
                     order = 7,
+                    exerciseOrder = 6,
                     name = "Extensión de tríceps en polea",
                     type = "Aislamiento",
                     muscleGroup = "Tríceps",
                     equipment = "Polea",
-                    technique = "Drop Set en la última serie: Vacía el tríceps bajando placas sin parar."
+                    targetSets = 2,
+                    targetRepRange = "10-15 reps",
+                    technique = "Drop Set en la última serie: 2 series | Meta: 10 a 15 reps vaciando el tríceps."
                 )
             )
         ),
 
-        // DÍA 5 — Tirón B (Espalda y bíceps prioritario)
+        // --- DÍA 5 (sortOrder = 5) ---
         RoutinePreset(
             dayNumber = 5,
+            sortOrder = 5,
             title = "Día 5 — Tirón B (Espalda y bíceps prioritario)",
-            focusDescription = "Espalda media, dorsal bajo y aislamiento prioritario de bíceps.",
+            focusDescription = "Espalda media, dorsal bajo y aislamiento prioritario de bíceps y abdomen.",
             exercises = listOf(
                 RoutineExercisePreset(
                     order = 1,
+                    exerciseOrder = 0,
                     name = "Remo con apoyo en el pecho",
                     type = "Compuesto",
-                    muscleGroup = "Espalda media",
+                    muscleGroup = "Espalda",
                     equipment = "Máquina",
-                    technique = "Pirámide Invertida: Serie 1 pesada a 8 reps; series 2 y 3 con peso menor a 10–12 reps."
+                    targetSets = 3,
+                    targetRepRange = "8-12 reps",
+                    technique = "Pirámide Invertida: 3 series | Meta: 8 a 12 reps retrayendo escápulas."
                 ),
                 RoutineExercisePreset(
                     order = 2,
+                    exerciseOrder = 1,
                     name = "Jalón al pecho agarre neutro",
                     type = "Compuesto",
-                    muscleGroup = "Dorsal ancho (bajo)",
+                    muscleGroup = "Espalda",
                     equipment = "Polea",
-                    technique = "Series Lineales: 3 series de 8–10 reps apretando los dorsales abajo."
+                    targetSets = 3,
+                    targetRepRange = "8-12 reps",
+                    technique = "Series Lineales: 3 series | Meta: 8 a 12 reps apretando dorsales abajo."
                 ),
                 RoutineExercisePreset(
                     order = 3,
+                    exerciseOrder = 2,
                     name = "Peck Deck inverso (pájaros)",
                     type = "Aislamiento",
-                    muscleGroup = "Deltoides posterior",
+                    muscleGroup = "Hombros",
                     equipment = "Máquina",
-                    technique = "Drop Set en la última serie: En serie 2, baja una placa y bombea repeticiones cortas."
+                    targetSets = 2,
+                    targetRepRange = "12-15 reps",
+                    technique = "Drop Set en la última serie: 2 series | Meta: 12 a 15 reps para deltoides posterior."
                 ),
                 RoutineExercisePreset(
                     order = 4,
+                    exerciseOrder = 3,
                     name = "Extensión lumbar en máquina",
                     type = "Compuesto accesorio",
-                    muscleGroup = "Erectores lumbares",
+                    muscleGroup = "Espalda",
                     equipment = "Máquina",
-                    technique = "Series Lineales: Peso controlado (10–12 reps) sin arquear bruscamente."
+                    targetSets = 2,
+                    targetRepRange = "10-15 reps",
+                    technique = "Series Lineales: 2 series | Meta: 10 a 15 reps controladas sin hiperextender."
                 ),
                 RoutineExercisePreset(
                     order = 5,
+                    exerciseOrder = 4,
                     name = "Curl de bíceps en polea baja",
                     type = "Aislamiento",
                     muscleGroup = "Bíceps",
                     equipment = "Polea",
-                    technique = "Drop Set en la última serie: En serie 3, reduce el pin para exprimir el bíceps al máximo."
+                    targetSets = 3,
+                    targetRepRange = "10-12 reps",
+                    technique = "Drop Set en la última serie: 3 series | Meta: 10 a 12 reps en tensión constante."
                 ),
                 RoutineExercisePreset(
                     order = 6,
-                    name = "Curl martillo con mancuernas",
+                    exerciseOrder = 5,
+                    name = "Curl martillo alterno con mancuernas",
                     type = "Aislamiento",
-                    muscleGroup = "Braquial y antebrazo",
+                    muscleGroup = "Bíceps",
                     equipment = "Mancuerna",
-                    technique = "Series Lineales: Movimiento alterno estricto a 10–12 reps."
+                    targetSets = 2,
+                    targetRepRange = "10-15 reps",
+                    technique = "Series Lineales: 2 series | Meta: 10 a 15 reps estrictas."
                 ),
                 RoutineExercisePreset(
                     order = 7,
+                    exerciseOrder = 6,
                     name = "Crunch abdominal en máquina",
                     type = "Aislamiento",
-                    muscleGroup = "Recto abdominal",
+                    muscleGroup = "Core",
                     equipment = "Máquina",
-                    technique = "Series Lineales: 3 series de 12–15 reps con buena contracción."
+                    targetSets = 3,
+                    targetRepRange = "12-15 reps",
+                    technique = "Series Lineales: 3 series | Meta: 12 a 15 reps con máxima contracción."
                 )
             )
         ),
 
-        // DÍA 6 — Pierna B (Glúteos y complementos)
+        // --- DÍA 6 (sortOrder = 6) ---
         RoutinePreset(
             dayNumber = 6,
+            sortOrder = 6,
             title = "Día 6 — Pierna B (Glúteos y complementos)",
-            focusDescription = "Glúteo mayor/medio, isquiotibiales, aductores y gemelos.",
+            focusDescription = "Glúteo mayor/medio, isquiotibiales, cuádriceps, aductores y pantorrillas.",
             exercises = listOf(
                 RoutineExercisePreset(
                     order = 1,
+                    exerciseOrder = 0,
                     name = "Prensa horizontal / sentada",
                     type = "Compuesto",
-                    muscleGroup = "Cuádriceps y glúteos",
+                    muscleGroup = "Cuádriceps",
                     equipment = "Máquina",
-                    technique = "Pirámide Invertida: Serie 1 pesada a 10 reps; series 2 y 3 bajando 1 placa."
+                    targetSets = 3,
+                    targetRepRange = "10-12 reps",
+                    technique = "Pirámide Invertida: 3 series | Meta: 10 a 12 reps profundas."
                 ),
                 RoutineExercisePreset(
                     order = 2,
+                    exerciseOrder = 1,
                     name = "Hip Thrust (máquina o barra)",
                     type = "Compuesto",
-                    muscleGroup = "Glúteo mayor",
+                    muscleGroup = "Glúteo",
                     equipment = "Barra",
-                    technique = "Pirámide Creciente: Serie 1 de tanteo técnico y Serie 2 con tu peso tope apretando arriba 2 seg."
+                    targetSets = 2,
+                    targetRepRange = "8-12 reps",
+                    technique = "Pirámide Creciente: 2 series | Meta: 8 a 12 reps apretando glúteo 2 seg arriba."
                 ),
                 RoutineExercisePreset(
                     order = 3,
+                    exerciseOrder = 2,
                     name = "Curl femoral sentado",
                     type = "Aislamiento",
                     muscleGroup = "Isquiotibiales",
                     equipment = "Máquina",
-                    technique = "Drop Set en la última serie: En serie 3, baja carga y estira completo cada repetición."
+                    targetSets = 3,
+                    targetRepRange = "10-15 reps",
+                    technique = "Drop Set en la última serie: 3 series | Meta: 10 a 15 reps con rango completo."
                 ),
                 RoutineExercisePreset(
                     order = 4,
+                    exerciseOrder = 3,
                     name = "Extensiones de cuádriceps",
                     type = "Aislamiento",
                     muscleGroup = "Cuádriceps",
                     equipment = "Máquina",
-                    technique = "Drop Set en la última serie: En serie 2, reduce el pin un 30% para remate metabólico."
+                    targetSets = 2,
+                    targetRepRange = "12-15 reps",
+                    technique = "Drop Set en la última serie: 2 series | Meta: 12 a 15 reps con pausa arriba."
                 ),
                 RoutineExercisePreset(
                     order = 5,
+                    exerciseOrder = 4,
                     name = "Máquina de abductores",
                     type = "Aislamiento",
-                    muscleGroup = "Glúteo medio/menor",
+                    muscleGroup = "Glúteo",
                     equipment = "Máquina",
-                    technique = "Drop Set en la última serie: En serie 2, saca 15 reps, baja el peso y saca 8 más."
+                    targetSets = 2,
+                    targetRepRange = "12-20 reps",
+                    technique = "Drop Set en la última serie: 2 series | Meta: 12 a 20 reps para glúteo medio."
                 ),
                 RoutineExercisePreset(
                     order = 6,
+                    exerciseOrder = 5,
                     name = "Máquina de aductores",
                     type = "Aislamiento",
                     muscleGroup = "Aductores",
                     equipment = "Máquina",
-                    technique = "Series Lineales: 12–15 reps con apertura controlada."
+                    targetSets = 2,
+                    targetRepRange = "12-15 reps",
+                    technique = "Series Lineales: 2 series | Meta: 12 a 15 reps con apertura controlada."
                 ),
                 RoutineExercisePreset(
                     order = 7,
-                    name = "Elevaciones de gemelos",
+                    exerciseOrder = 6,
+                    name = "Elevaciones de gemelos (pantorrilla)",
                     type = "Aislamiento",
                     muscleGroup = "Pantorrillas",
                     equipment = "Máquina",
-                    technique = "Series Lineales con pausa: 3 series de 15 reps con estiramiento profundo."
+                    targetSets = 3,
+                    targetRepRange = "12-20 reps",
+                    technique = "Series Lineales con pausa: 3 series | Meta: 12 a 20 reps con estiramiento profundo."
                 )
             )
         )
     )
 
     /**
-     * Busca la técnica recomendada para un ejercicio dado el título de la rutina (o workout) y el nombre del ejercicio.
+     * Busca la configuración preset (series, rango de repeticiones y técnica) para un ejercicio.
      */
-    fun findTechnique(routineTitle: String, exerciseName: String): String? {
-        val preset = allPresets.firstOrNull { 
-            routineTitle.contains(it.title, ignoreCase = true) || it.title.contains(routineTitle, ignoreCase = true)
+    fun findExercisePreset(routineTitle: String, exerciseName: String): RoutineExercisePreset? {
+        val preset = allPresets.firstOrNull {
+            routineTitle.contains("Día ${it.dayNumber}", ignoreCase = true) ||
+                routineTitle.contains(it.title, ignoreCase = true) ||
+                it.title.contains(routineTitle, ignoreCase = true)
         }
         if (preset != null) {
-            val ex = preset.exercises.firstOrNull { 
-                it.name.equals(exerciseName, ignoreCase = true) || exerciseName.contains(it.name, ignoreCase = true) || it.name.contains(exerciseName, ignoreCase = true)
+            val ex = preset.exercises.firstOrNull {
+                it.name.equals(exerciseName, ignoreCase = true) ||
+                    exerciseName.contains(it.name, ignoreCase = true) ||
+                    it.name.contains(exerciseName, ignoreCase = true)
             }
-            if (ex != null) return ex.technique
+            if (ex != null) return ex
         }
 
-        // Búsqueda alternativa global en todos los presets si no coincide el título
         for (p in allPresets) {
-            val ex = p.exercises.firstOrNull { it.name.equals(exerciseName, ignoreCase = true) }
-            if (ex != null) return ex.technique
+            val ex = p.exercises.firstOrNull {
+                it.name.equals(exerciseName, ignoreCase = true) ||
+                    exerciseName.contains(it.name, ignoreCase = true) ||
+                    it.name.contains(exerciseName, ignoreCase = true)
+            }
+            if (ex != null) return ex
         }
 
         return null
+    }
+
+    /**
+     * Busca la técnica recomendada para un ejercicio dado el título de la rutina (o workout) y el nombre del ejercicio.
+     */
+    fun findTechnique(routineTitle: String, exerciseName: String): String? {
+        return findExercisePreset(routineTitle, exerciseName)?.technique
     }
 
     /**
@@ -405,9 +541,9 @@ object DefaultRoutinesData {
     fun generateRoutineNotes(preset: RoutinePreset): String {
         val sb = StringBuilder()
         sb.append(preset.focusDescription).append("\n\n")
-        sb.append("Técnicas recomendadas (Compuestos → Aislamiento):\n")
-        preset.exercises.forEach { ex ->
-            sb.append("${ex.order}. ${ex.name} [${ex.type} | ${ex.muscleGroup}]: ${ex.technique}\n")
+        sb.append("Orden estricto y metas por ejercicio:\n")
+        preset.exercises.sortedBy { it.exerciseOrder }.forEach { ex ->
+            sb.append("${ex.order}. ${ex.name} [${ex.muscleGroup} | ${ex.targetSets} series | Meta: ${ex.targetRepRange}]\n")
         }
         return sb.toString().trim()
     }
